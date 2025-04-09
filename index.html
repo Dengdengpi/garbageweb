@@ -3,9 +3,9 @@
 <head>
   <!-- 
     ULTRA-FANCY SMART GARBAGE BIN PAGE
-    - Quad (!) star backgrounds with multiple falling star effects
+    - Quad star backgrounds + star rain
     - Auto-flip PCBs every 3s
-    - Neon arrows (responsive on phones)
+    - Neon arrows (gone for schematics – now just normal images)
     - Clear history button in the game
     - GSAP + AOS + typed.js + wave dividers + much more
   -->
@@ -13,7 +13,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Smart Garbage Bin - Beyond the Galaxy</title>
 
-  <!-- Google Font: Poppins for a modern look -->
+  <!-- Google Font: Poppins -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap" rel="stylesheet" />
 
@@ -35,11 +35,9 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
 
   <style>
-    /* 
-      ====================================================
-      GLOBAL
-      ====================================================
-    */
+    /* =========================================
+       GLOBAL STYLES
+    ========================================== */
     * {
       margin: 0; 
       padding: 0;
@@ -59,14 +57,10 @@
       ====================================================
       1) MULTI-LAYER STAR + STARFALL 
       ====================================================
-      We'll have 4 layers of star canvases now (overkill).
-      Also separate "star-rain" div that spawns falling star <span> elements, 
-      so we have a "star fall from top" effect in addition to the canvases.
     */
     #starfieldContainer {
       position: fixed;
-      top: 0; 
-      left: 0;
+      top: 0; left: 0;
       width: 100%;
       height: 100%;
       z-index: -9999;
@@ -78,7 +72,6 @@
       width: 100%; 
       height: 100%;
     }
-    /* The star-rain container for the "fall from top" star effect */
     #starRainContainer {
       pointer-events: none;
       position: fixed;
@@ -107,7 +100,7 @@
     }
 
     /* 
-      TEXT STYLES 
+      TEXT & WAVES
     */
     .fancy-glow:hover {
       text-shadow: 
@@ -118,25 +111,25 @@
       transition: all 0.6s ease;
       transform: scale(1.05);
     }
-
-    /* 
-      SECTION WAVES 
-    */
     .section-wave {
-      margin-top: -5px; 
+      margin-top: -5px;
     }
 
     /* 
       ====================================================
-      2) COVERFLOW
-      ====================================================
+      2) COVERFLOW 
+      => Now "slide0" = video
+         "slide1" = product2
+         "slide2" = product3
+      => Moved the container slightly left from the text 
+         by using bigger gap in the grid (gap-16).
     */
     .coverflow-container {
       perspective: 1000px;
       position: relative;
       width: 100%; 
       max-width: 340px; 
-      height: 260px; 
+      height: 260px;
       margin: 0 auto;
       overflow: visible;
     }
@@ -165,7 +158,6 @@
       height: 100%;
       object-fit: cover;
     }
-
     .coverflow-thumbs,
     .coverflow-dots {
       display: flex;
@@ -197,78 +189,15 @@
 
     /* 
       ====================================================
-      3) SCHEMATIC ARROWS
-      - On mobile we reduce their size or move them above 
+      3) REMOVED SCHEMATIC SLIDESHOW
+         Just display the two images side by side. 
+         Neon arrows are GONE for the schematic.
+      ====================================================
     */
-    .schematic-slideshow {
-      width: 100%;
-      max-width: 600px;
-      margin: 0 auto;
-      overflow: hidden;
-      border-radius: 8px;
-      position: relative;
-    }
-    .schematic-slide img {
-      max-height: 400px;
-      transition: transform 0.3s;
-      cursor: zoom-in;
-    }
-    .schematic-slide:hover img {
-      transform: scale(1.1);
-    }
-
-    .schematic-arrow {
-      position: absolute;
-      top: 50%;
-      width: 80px; 
-      height: 80px;
-      background: linear-gradient(135deg, #0ff, #48f);
-      color: #000; 
-      border: 2px solid #fff;
-      border-radius: 50%;
-      text-align: center; 
-      line-height: 76px;
-      font-weight: bold; 
-      font-size: 2.5rem;
-      box-shadow: 0 0 10px rgba(0,255,255,0.7);
-      transform: translateY(-50%);
-      z-index: 50;
-      transition: transform 0.4s;
-    }
-    .schematic-arrow:hover {
-      box-shadow: 0 0 30px rgba(0,255,255,1);
-      transform: translateY(-50%) rotate(20deg) scale(1.2);
-    }
-    #schematicArrowLeft {
-      left: -100px;
-    }
-    #schematicArrowRight {
-      right: -100px;
-    }
-
-    /* Smaller arrow for phone */
-    @media(max-width: 640px) {
-      .schematic-arrow {
-        width: 50px;
-        height: 50px;
-        font-size: 1.2rem;
-        line-height: 46px;
-      }
-      #schematicArrowLeft {
-        left: -70px;
-      }
-      #schematicArrowRight {
-        right: -70px;
-      }
-    }
 
     /* 
       ====================================================
-      4) PCBs 
-      We want them to auto-flip every 3 seconds 
-      AND on hover flip. We'll do a combination:
-      - A "flip-interval" that toggles a class 
-      - If user hovers, we do an immediate flip, etc.
+      4) PCBs (auto-flip every 3s + hover)
     */
     .pcb-container {
       perspective: 1000px;
@@ -293,11 +222,10 @@
     .pcb-back {
       transform: rotateY(180deg);
     }
-    /* This class will flip it automatically */
     .pcb-flipped .pcb-inner {
       transform: rotateY(180deg);
     }
-    /* also on hover we can flip (if not overridden) */
+    /* also flips on hover if not auto flipping */
     .pcb-container:hover .pcb-inner {
       transform: rotateY(180deg) !important;
     }
@@ -305,7 +233,6 @@
     /* 
       ====================================================
       5) SORTING GAME
-      Clear history button 
     */
     #sortingGame {
       background: #222;
@@ -335,12 +262,28 @@
         transform: translateY(120vh) rotate(720deg);
       }
     }
+
+    /* 
+      MEDIA QUERY TWEAKS FOR PHONE
+      If you want, you could also shrink the coverflow 
+      or do other adjustments here. 
+    */
+    @media(max-width: 640px) {
+      .coverflow-container {
+        max-width: 280px;
+        height: 220px;
+      }
+      .coverflow-slide {
+        width: 180px;
+        margin-left: -90px;
+      }
+    }
   </style>
 </head>
 <body>
+
 <!-- 
-  1) Quad starfield container 
-  plus a star-rain container for "fall from top"
+  1) Quad starfield container + star rain
 -->
 <div id="starfieldContainer">
   <canvas id="starfield1" class="starfield-canvas"></canvas>
@@ -348,12 +291,9 @@
   <canvas id="starfield3" class="starfield-canvas"></canvas>
   <canvas id="starfield4" class="starfield-canvas"></canvas>
 </div>
+<div id="starRainContainer"></div>
 
-<div id="starRainContainer"></div> <!-- falling stars here -->
-
-<!-- 
-  HERO 
--->
+<!-- HERO -->
 <section class="min-h-screen flex flex-col items-center justify-center px-4 text-center relative">
   <h1 class="text-5xl md:text-6xl font-extrabold mb-4 fancy-glow">
     Smart Garbage Bin
@@ -383,31 +323,35 @@
 
 <!-- 
   2) PRODUCT SHOWCASE 
+  => Larger gap so coverflow is more to the left, text on right
 -->
 <section id="productShowcase" class="py-16" data-aos="fade-right">
-  <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
-    <!-- coverflow -->
+  <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-16 items-center">
+    <!-- coverflow => first = video -->
     <div>
       <div class="coverflow-container">
         <div class="coverflow-track" id="coverflowTrack">
+          <!-- slide0 = video -->
           <div class="coverflow-slide" id="slide0">
+            <video controls poster="images/videoposter.jpg">
+              <source src="video/video.mp4" type="video/mp4"/>
+            </video>
+          </div>
+          <!-- slide1 = product2 -->
+          <div class="coverflow-slide" id="slide1">
             <img src="images/product2.jpeg" alt="Product Shot 2" />
           </div>
-          <div class="coverflow-slide" id="slide1">
-            <img src="images/product3.jpeg" alt="Product Shot 3" />
-          </div>
+          <!-- slide2 = product3 -->
           <div class="coverflow-slide" id="slide2">
-            <video controls poster="images/videoposter.jpg">
-              <source src="video/video.mp4" type="video/mp4" />
-            </video>
+            <img src="images/product3.jpeg" alt="Product Shot 3" />
           </div>
         </div>
       </div>
       <!-- thumbnails & dots -->
       <div class="coverflow-thumbs mt-2">
-        <img src="images/product2.jpeg" alt="Thumb1" onclick="goToCoverflow(0)" />
-        <img src="images/product3.jpeg" alt="Thumb2" onclick="goToCoverflow(1)" />
-        <img src="images/videoposter.jpg" alt="Thumb3" onclick="goToCoverflow(2)" />
+        <img src="images/videoposter.jpg" alt="ThumbVideo" onclick="goToCoverflow(0)" />
+        <img src="images/product2.jpeg" alt="Thumb1" onclick="goToCoverflow(1)" />
+        <img src="images/product3.jpeg" alt="Thumb2" onclick="goToCoverflow(2)" />
       </div>
       <div class="coverflow-dots" id="coverflowDots">
         <div class="coverflow-dot" onclick="goToCoverflow(0)"></div>
@@ -416,7 +360,7 @@
       </div>
     </div>
 
-    <!-- text -->
+    <!-- text on the right, with bigger gap now -->
     <div>
       <h2 class="text-3xl md:text-4xl font-bold mb-4 fancy-glow">The Future of Waste</h2>
       <p class="text-gray-300 mb-4 leading-relaxed">
@@ -493,27 +437,32 @@
 
 <!-- 
   4) SCHEMATICS & PCBs 
+  => NO slideshow. Just show the two schematic images side by side.
 -->
 <section id="schematicPCBs" class="py-16 text-center" data-aos="fade-up">
   <div class="max-w-6xl mx-auto px-4">
     <h2 class="text-3xl md:text-4xl font-bold mb-6 fancy-glow">Schematics &amp; PCBs</h2>
     <p class="text-gray-300 max-w-xl mx-auto mb-8">
-      Giant neon arrow icons for <strong>mobile + desktop</strong>, auto-flip PCBs every 3 seconds, 
-      and flip on hover too.
+      Displaying the two schematics normally (side by side on desktop, stacked on mobile),
+      plus the auto-flip PCBs.
     </p>
 
-    <!-- Schematic slideshow (2 slides) -->
-    <div class="relative schematic-slideshow mb-12">
-      <div id="schematicArrowLeft" class="schematic-arrow">&larr;</div>
-      <div id="schematicTrack" class="flex w-[200%] transition-transform duration-500">
-        <div class="schematic-slide w-1/2 flex items-center justify-center">
-          <img src="images/schematic-arduino.png" alt="Arduino Schematic"/>
-        </div>
-        <div class="schematic-slide w-1/2 flex items-center justify-center">
-          <img src="images/schematic-maix.png" alt="Maix Bit Schematic"/>
-        </div>
+    <!-- Two schematics side-by-side on larger screens -->
+    <div class="grid md:grid-cols-2 gap-8 mb-12">
+      <div>
+        <img 
+          src="images/schematic-arduino.png" 
+          alt="Arduino Schematic" 
+          class="mx-auto mb-4 max-w-full h-auto"
+        />
       </div>
-      <div id="schematicArrowRight" class="schematic-arrow">&rarr;</div>
+      <div>
+        <img 
+          src="images/schematic-maix.png" 
+          alt="Maix Bit Schematic" 
+          class="mx-auto mb-4 max-w-full h-auto"
+        />
+      </div>
     </div>
 
     <!-- PCBs auto flip -->
@@ -726,14 +675,10 @@
 </footer>
 
 <script>
-  /*******************************************************
-   * 1) AOS
-   *******************************************************/
+  /* AOS init */
   AOS.init({ duration: 1200, once: true });
 
-  /*******************************************************
-   * 2) TYPED HERO TEXT
-   *******************************************************/
+  /* typed.js for hero text */
   var typed = new Typed('#heroTyped', {
     strings: [
       "Revolutionize waste sorting with AI detection & confirmable compartments...",
@@ -746,11 +691,10 @@
     loop: true
   });
 
-  /*******************************************************
-   * 3) STARFIELDS + STAR RAIN
-   *******************************************************/
+  /* GSAP + ScrollTrigger for timeline steps & starfields */
   gsap.registerPlugin(ScrollTrigger);
 
+  /* 4-layers starfields + star rain => same as before */
   const c1 = document.getElementById("starfield1");
   const ctx1 = c1.getContext("2d");
   const c2 = document.getElementById("starfield2");
@@ -761,26 +705,26 @@
   const ctx4 = c4.getContext("2d");
 
   let stars1=[], stars2=[], stars3=[], stars4=[];
-  let starCount = 150;
+  let starCount=150;
 
   function resizeAllStars(){
     [c1,c2,c3,c4].forEach(cv=>{
-      cv.width = window.innerWidth;
-      cv.height = window.innerHeight;
+      cv.width=window.innerWidth;
+      cv.height=window.innerHeight;
     });
-    stars1 = createStars(starCount, c1.width, c1.height, 0.3, 1.0);
-    stars2 = createStars(starCount, c2.width, c2.height, 0.6, 1.5);
-    stars3 = createStars(starCount, c3.width, c3.height, 0.9, 2.2);
-    stars4 = createStars(starCount, c4.width, c4.height, 1.2, 3.0);
+    stars1 = createStars(starCount, c1.width, c1.height, 0.3,1.0);
+    stars2 = createStars(starCount, c2.width, c2.height, 0.6,1.5);
+    stars3 = createStars(starCount, c3.width, c3.height, 0.9,2.2);
+    stars4 = createStars(starCount, c4.width, c4.height, 1.2,3.0);
   }
-  function createStars(count, w, h, speedMin, speedMax){
-    let arr = [];
-    for(let i=0; i<count; i++){
+  function createStars(count,w,h,speedMin,speedMax){
+    let arr=[];
+    for(let i=0;i<count;i++){
       arr.push({
-        x: Math.random()*w,
-        y: Math.random()*h,
-        size: Math.random()*2,
-        speed: speedMin + Math.random()*(speedMax - speedMin)
+        x:Math.random()*w,
+        y:Math.random()*h,
+        size:Math.random()*2,
+        speed:speedMin+Math.random()*(speedMax-speedMin)
       });
     }
     return arr;
@@ -788,110 +732,105 @@
   function animateStars(){
     // layer 1
     ctx1.clearRect(0,0,c1.width,c1.height);
-    ctx1.fillStyle = "#fff";
+    ctx1.fillStyle="#fff";
     for(let s of stars1){
-      s.y += s.speed;
-      if(s.y > c1.height) s.y=0;
-      ctx1.fillRect(s.x, s.y, s.size, s.size);
+      s.y+=s.speed;
+      if(s.y>c1.height)s.y=0;
+      ctx1.fillRect(s.x,s.y,s.size,s.size);
     }
     // layer 2
     ctx2.clearRect(0,0,c2.width,c2.height);
-    ctx2.fillStyle = "#fff";
+    ctx2.fillStyle="#fff";
     for(let s of stars2){
-      s.y += s.speed;
-      if(s.y > c2.height) s.y=0;
-      ctx2.fillRect(s.x, s.y, s.size, s.size);
+      s.y+=s.speed;
+      if(s.y>c2.height)s.y=0;
+      ctx2.fillRect(s.x,s.y,s.size,s.size);
     }
     // layer 3
     ctx3.clearRect(0,0,c3.width,c3.height);
-    ctx3.fillStyle = "#fff";
+    ctx3.fillStyle="#fff";
     for(let s of stars3){
-      s.y += s.speed;
-      if(s.y>c3.height) s.y=0;
-      ctx3.fillRect(s.x, s.y, s.size, s.size);
+      s.y+=s.speed;
+      if(s.y>c3.height)s.y=0;
+      ctx3.fillRect(s.x,s.y,s.size,s.size);
     }
     // layer 4
     ctx4.clearRect(0,0,c4.width,c4.height);
-    ctx4.fillStyle = "#fff";
+    ctx4.fillStyle="#fff";
     for(let s of stars4){
-      s.y += s.speed;
-      if(s.y>c4.height) s.y=0;
-      ctx4.fillRect(s.x, s.y, s.size, s.size);
+      s.y+=s.speed;
+      if(s.y>c4.height)s.y=0;
+      ctx4.fillRect(s.x,s.y,s.size,s.size);
     }
     requestAnimationFrame(animateStars);
   }
-  window.addEventListener("resize", resizeAllStars);
+  window.addEventListener("resize",resizeAllStars);
   resizeAllStars();
   animateStars();
 
-  // STAR RAIN - spawn falling <span> of "*"
-  const starRainContainer = document.getElementById("starRainContainer");
+  // star rain
+  const starRainContainer=document.getElementById("starRainContainer");
   function spawnFallingStar(){
-    let st = document.createElement("span");
+    let st=document.createElement("span");
     st.classList.add("falling-star");
-    st.innerText = "*"; 
-    let startX = Math.random()*window.innerWidth;
-    st.style.left = startX + "px";
+    st.innerText="*";
+    let startX=Math.random()*window.innerWidth;
+    st.style.left=startX+"px";
     starRainContainer.appendChild(st);
-    setTimeout(()=> st.remove(), 4000);
+    setTimeout(()=>st.remove(),4000);
   }
   setInterval(()=>{
     if(Math.random()<0.5){
       spawnFallingStar();
     }
-  }, 500);
+  },500);
 
-  /*******************************************************
-   * 4) GSAP SCROLL ANIM 
-   *******************************************************/
   // timeline steps
   ["#timelineStep1","#timelineStep2","#timelineStep3","#timelineStep4"].forEach((sel,i)=>{
-    gsap.from(sel, {
-      scrollTrigger: {
-        trigger: sel,
-        start: "top 80%",
+    gsap.from(sel,{
+      scrollTrigger:{
+        trigger:sel,
+        start:"top 80%",
       },
-      duration: 1.2,
-      x: i%2===0 ? -200 : 200,
-      opacity: 0,
-      ease: "power2.out"
+      duration:1.2,
+      x:i%2===0?-200:200,
+      opacity:0,
+      ease:"power2.out"
     });
   });
 
-  /*******************************************************
-   * 5) COVERFLOW
-   *******************************************************/
-  let currentIndex = 0;
-  const slides = [
+  /* COVERFLOW */
+  let currentIndex=0;
+  const slides=[
     document.getElementById("slide0"),
     document.getElementById("slide1"),
     document.getElementById("slide2"),
   ];
-  const dots = document.getElementById("coverflowDots").children;
+  const dots=document.getElementById("coverflowDots").children;
   function updateCoverflow(){
-    for(let i=0; i<slides.length; i++){
-      let offset = i - currentIndex;
-      let slide = slides[i];
-      slide.style.transform = `
+    for(let i=0;i<slides.length;i++){
+      let offset=i-currentIndex;
+      let slide=slides[i];
+      slide.style.transform=`
         translateX(${offset*180}px)
         translateZ(${-Math.abs(offset)*180}px)
         rotateY(${offset*-20}deg)
-        scale(${1 - Math.abs(offset)*0.1})
+        scale(${1-Math.abs(offset)*0.1})
       `;
-      slide.style.zIndex = slides.length - Math.abs(offset);
+      slide.style.zIndex=slides.length -Math.abs(offset);
     }
-    for(let j=0; j<dots.length; j++){
+    for(let j=0;j<dots.length;j++){
       dots[j].classList.remove("active");
     }
     dots[currentIndex].classList.add("active");
   }
-  slides.forEach((s, i)=>{
-    s.addEventListener("click", ()=>{
-      if(i !== currentIndex){
-        currentIndex = i;
+  slides.forEach((s,i)=>{
+    s.addEventListener("click",()=>{
+      if(i!==currentIndex){
+        currentIndex=i;
         updateCoverflow();
       } else {
-        let vid = s.querySelector("video");
+        let vid=s.querySelector("video");
         if(vid){
           if(vid.paused) vid.play();
           else vid.pause();
@@ -900,28 +839,12 @@
     });
   });
   function goToCoverflow(idx){
-    currentIndex=idx; updateCoverflow();
+    currentIndex=idx;
+    updateCoverflow();
   }
   updateCoverflow();
 
-  /*******************************************************
-   * 6) SCHEMATICS ARROWS
-   *******************************************************/
-  let schematicIndex=0;
-  const schematicTrack=document.getElementById("schematicTrack");
-  function updateSchematic(){
-    schematicTrack.style.transform=`translateX(${schematicIndex*-50}%)`;
-  }
-  document.getElementById("schematicArrowLeft").addEventListener("click", ()=>{
-    schematicIndex=(schematicIndex-1+2)%2; updateSchematic();
-  });
-  document.getElementById("schematicArrowRight").addEventListener("click", ()=>{
-    schematicIndex=(schematicIndex+1)%2; updateSchematic();
-  });
-
-  /*******************************************************
-   * 7) AUTO-FLIP PCBs EVERY 3s
-   *******************************************************/
+  /* AUTO-FLIP PCBs EVERY 3s */
   const pcb1=document.getElementById("pcb1");
   const pcb2=document.getElementById("pcb2");
   let flipState1=false, flipState2=false;
@@ -940,9 +863,7 @@
     }
   },3000);
 
-  /*******************************************************
-   * 8) SORTING GAME
-   *******************************************************/
+  /* SORTING GAME */
   const canvas=document.getElementById("sortingGame");
   const ctx=canvas.getContext("2d");
   const startGameBtn=document.getElementById("startGameBtn");
@@ -996,7 +917,7 @@
   ];
 
   function initGame(){
-    if(isPlaying) return;
+    if(isPlaying)return;
     isPlaying=true;
     score=0; currentItemIndex=0; resultDetails=[];
     detailedResultsTbody.innerHTML="";
@@ -1006,7 +927,7 @@
     gameResult.classList.add("hidden");
 
     itemsToDrop=[];
-    for(let i=0; i<15; i++){
+    for(let i=0;i<15;i++){
       let pick=garbagePool[Math.floor(Math.random()*garbagePool.length)];
       itemsToDrop.push(pick);
     }
@@ -1019,7 +940,8 @@
       return;
     }
     currentItem=itemsToDrop[currentItemIndex];
-    itemTrack=1; itemY=-50;
+    itemTrack=1; 
+    itemY=-50;
     itemVY=2+Math.random()*2;
   }
   function animateGame(){
@@ -1032,7 +954,7 @@
       if(itemY>=370){
         let assignedBin=bins[itemTrack].label;
         let correct=(assignedBin===currentItem.type);
-        if(correct) score++;
+        if(correct)score++;
         resultDetails.push({
           itemName: currentItem.name,
           correctBin: currentItem.type,
@@ -1047,7 +969,7 @@
   function drawBins(){
     ctx.fillStyle="#666";
     ctx.fillRect(0,380,600,20);
-    for(let i=0; i<4; i++){
+    for(let i=0;i<4;i++){
       ctx.strokeStyle="#aaa";
       ctx.strokeRect(i*150,380,150,20);
       ctx.fillStyle="#fff";
@@ -1117,7 +1039,7 @@
 
   // confetti
   function launchConfetti(count){
-    for(let i=0; i<count; i++){
+    for(let i=0;i<count;i++){
       createConfettiPiece();
     }
   }
@@ -1152,7 +1074,6 @@
     drawScoreChart(); // clears the chart
   });
 
-  // local storage
   function saveScoreHistory(sc){
     let arr=JSON.parse(localStorage.getItem("sortingGameScores")||"[]");
     arr.push({date:new Date().toISOString(),score:sc});
@@ -1161,14 +1082,15 @@
   function drawScoreChart(){
     let arr=JSON.parse(localStorage.getItem("sortingGameScores")||"[]");
     d3.select("#scoreChart").select("svg").remove();
-    if(arr.length===0) return; 
-    arr.forEach(d=> d.parsedDate=new Date(d.date));
-    arr.sort((a,b)=> a.parsedDate-b.parsedDate);
+    if(arr.length===0) return;
+    arr.forEach(d=>d.parsedDate=new Date(d.date));
+    arr.sort((a,b)=>a.parsedDate-b.parsedDate);
 
-    const w=600, h=300, margin={top:20,right:20,bottom:30,left:40};
+    const w=600,h=300,margin={top:20,right:20,bottom:30,left:40};
     let svg=d3.select("#scoreChart").append("svg")
       .attr("width",w)
       .attr("height",h);
+
     let x=d3.scaleTime()
       .domain(d3.extent(arr,d=>d.parsedDate))
       .range([margin.left,w-margin.right]);
