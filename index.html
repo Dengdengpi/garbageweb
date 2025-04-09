@@ -3,13 +3,12 @@
 <head>
   <!-- 
     ULTRA-FANCY SMART GARBAGE BIN PAGE
-    - Transparent starfields for actual "rain" effect
-    - Video is no longer muted
+    - Transparent starfields => "rain" effect
     - Ordinal axis "1st, 2nd, 3rd..." in History
     - Partially transparent waves
-    - Truncated item names in results
-    - Updated: Now 40 items in garbagePool, bigger item bounding box
-    - Now with TWO-LINE item text in the game
+    - Two-line item names in sorting game (split on first space)
+    - Chart is truly responsive on phone
+    - Always shows History container (No data msg if no scores)
   -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -37,9 +36,7 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
 
   <style>
-    /* ======================================================
-       GLOBAL
-    ====================================================== */
+    /* ============= GLOBAL ============= */
     * {
       margin: 0; 
       padding: 0;
@@ -51,20 +48,13 @@
       font-family: 'Poppins', sans-serif;
       overflow-x: hidden;
     }
-    a {
-      text-decoration: none;
-    }
+    a { text-decoration: none; }
 
-    /* 
-      ====================================================
-      SWIRLING GRADIENT BG
-    */
+    /* ============= SWIRLING GRADIENT BG ============= */
     #gradientBG {
       position: fixed;
-      top: 0; 
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       z-index: -10000;
       background: linear-gradient(135deg, #ff0080, #ff8c00, #40c8ff, #ff40ff);
       background-size: 600% 600%;
@@ -77,56 +67,34 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* 
-      ====================================================
-      STARFIELDS & RAIN
-    */
+    /* ============= STARFIELDS & RAIN ============= */
     #starfieldContainer {
       position: fixed;
-      top: 0; 
-      left: 0;
-      width: 100%; 
-      height: 100%;
-      z-index: -9999;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -9999; 
       overflow: hidden;
     }
     .starfield-canvas {
-      position: absolute;
-      top: 0; 
-      left: 0;
-      width: 100%; 
-      height: 100%;
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
     }
     #starRainContainer {
       pointer-events: none;
-      position: fixed;
-      top: 0; 
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -9998;
-      overflow: hidden;
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -9998; overflow: hidden;
     }
     .falling-star {
-      position: absolute;
-      font-size: 14px;
-      font-weight: bold;
+      position: absolute; font-size: 14px; font-weight: bold;
       animation: starFall 4s linear infinite;
     }
     @keyframes starFall {
-      0% {
-        transform: translateY(-50px);
-        opacity: 1;
-      }
-      100% {
-        transform: translateY(110vh);
-        opacity: 0;
-      }
+      0% { transform: translateY(-50px); opacity: 1; }
+      100% { transform: translateY(110vh); opacity: 0; }
     }
 
-    /* 
-      AUTO TEXT GLOW
-    */
+    /* AUTO GLOW TEXT */
     .auto-glow {
       animation: glowPulse 3s infinite;
     }
@@ -143,205 +111,134 @@
       100% { text-shadow: none; }
     }
 
-    .section-wave {
-      margin-top: -5px;
-    }
+    .section-wave { margin-top: -5px; }
+    .section-wave svg path { fill: rgba(0,0,0,0.4); }
 
-    /* partially transparent wave so swirl behind is visible */
-    .section-wave svg path {
-      fill: rgba(0,0,0,0.4);
-    }
-
-    /* 
-      COVERFLOW
-    */
+    /* ============= COVERFLOW ============= */
     .coverflow-container {
       perspective: 1000px;
       position: relative;
-      width: 100%;
-      max-width: 340px;
+      width: 100%; max-width: 340px; 
       height: 260px;
-      margin: 0 auto;
-      overflow: visible;
+      margin: 0 auto; overflow: visible;
     }
     .coverflow-track {
-      width: 100%;
+      width: 100%; 
       height: 100%;
-      position: absolute;
+      position: absolute; 
       transform-style: preserve-3D;
     }
     .coverflow-slide {
-      width: 220px; 
-      height: 100%;
-      position: absolute;
-      top: 0; left: 50%;
+      width: 220px; height: 100%;
+      position: absolute; top: 0; left: 50%;
       margin-left: -110px;
-      border-radius: 8px;
-      overflow: hidden;
+      border-radius: 8px; overflow: hidden;
       background: #111;
       box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-      cursor: pointer;
+      cursor: pointer; 
       transition: transform 0.6s ease;
     }
-    .coverflow-slide img,
-    .coverflow-slide video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+    .coverflow-slide img, .coverflow-slide video {
+      width: 100%; height: 100%; object-fit: cover;
     }
-    .coverflow-thumbs,
-    .coverflow-dots {
-      display: flex;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
+    .coverflow-thumbs, .coverflow-dots {
+      display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.5rem;
     }
     .coverflow-thumbs img {
-      width: 48px; 
-      height: 48px;
-      border-radius: 4px;
-      object-fit: cover;
-      cursor: pointer;
-      transition: transform 0.2s;
+      width: 48px; height: 48px; border-radius: 4px; object-fit: cover;
+      cursor: pointer; transition: transform 0.2s;
     }
-    .coverflow-thumbs img:hover {
-      transform: scale(1.1);
-    }
+    .coverflow-thumbs img:hover { transform: scale(1.1); }
     .coverflow-dot {
-      width: 10px; 
-      height: 10px;
-      background: #444;
-      border-radius: 50%;
-      cursor: pointer;
+      width: 10px; height: 10px; background: #444; border-radius: 50%; cursor: pointer;
     }
-    .coverflow-dot.active {
-      background: #fff;
-    }
+    .coverflow-dot.active { background: #fff; }
 
-    /* 
-      PCBs => auto flip every 3s
-    */
+    /* ============= PCBs => auto flip ============= */
     .pcb-container {
       perspective: 1000px;
-      width: 300px; 
-      height: 300px;
-      margin: 0 auto;
+      width: 300px; height: 300px;
+      margin: 0 auto; 
       position: relative;
     }
     .pcb-inner {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transition: transform 1s;
-      transform-style: preserve-3D;
+      width: 100%; height: 100%;
+      position: relative; transition: transform 1s; transform-style: preserve-3D;
     }
     .pcb-front, .pcb-back {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; 
-      height: 100%;
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
       backface-visibility: hidden;
     }
-    .pcb-back {
-      transform: rotateY(180deg);
-    }
-    .pcb-flipped .pcb-inner {
-      transform: rotateY(180deg);
-    }
-    /* also flips on hover */
+    .pcb-back { transform: rotateY(180deg); }
+    .pcb-flipped .pcb-inner { transform: rotateY(180deg); }
     .pcb-container:hover .pcb-inner {
       transform: rotateY(180deg) !important;
     }
 
-    /* 
-      SORTING GAME
-    */
+    /* ============= SORTING GAME ============= */
     #sortingGame {
       background: #222;
-      display: block;
-      margin: 0 auto;
-      border: 4px solid #666;
-      border-radius: 8px;
+      display: block; margin: 0 auto;
+      border: 4px solid #666; border-radius: 8px;
     }
     .confetti-container {
-      position: absolute; 
-      top: 0; left: 0;
-      width: 100%; 
-      height: 100%;
-      pointer-events: none;
-      z-index: 9999;
-      overflow: hidden;
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; z-index: 9999; overflow: hidden;
     }
     .confetti-piece {
-      position: absolute;
-      width: 10px; 
-      height: 10px;
-      background: red;
+      position: absolute; width: 10px; height: 10px; background: red;
       animation: confetti-fall 3s linear infinite;
     }
     @keyframes confetti-fall {
-      to {
-        transform: translateY(120vh) rotate(720deg);
-      }
+      to { transform: translateY(120vh) rotate(720deg); }
     }
 
-    /* Truncate itemName in table result */
+    /* Truncate itemName in result table if needed */
     td.itemName {
-      max-width:80px;
-      white-space:nowrap;
-      overflow:hidden;
+      max-width:80px; 
+      white-space:nowrap; 
+      overflow:hidden; 
       text-overflow:ellipsis;
     }
 
-    /* RESPONSIVE => narrower chart on phone, etc. */
+    /* ============= RESPONSIVE ADJUSTMENTS ============= */
     @media (max-width: 640px) {
       .coverflow-container {
-        max-width: 280px;
-        height: 220px;
+        max-width: 280px; 
+        height:220px;
       }
-      .coverflow-slide {
-        width: 180px; 
-        margin-left: -90px;
-      }
+      .coverflow-slide { width:180px; margin-left:-90px; }
 
       #sortingGame {
-        max-width: 320px;
-        width: 100%;
-        height: 220px;
+        max-width:320px; width:100%; height:220px;
       }
-      #resultContainer,
-      #scoreHistoryContainer {
-        max-width: 320px;
-        margin: 0 auto;
+      #resultContainer, #scoreHistoryContainer {
+        max-width:320px; margin:0 auto;
       }
-      #resultContainer table,
-      #scoreHistoryContainer table {
-        font-size: 0.7rem;
+      #resultContainer table, #scoreHistoryContainer table {
+        font-size:0.7rem;
       }
-      #resultContainer button,
-      #scoreHistoryContainer button {
-        padding: 0.5rem 0.5rem;
-        font-size: 0.75rem;
+      #resultContainer button, #scoreHistoryContainer button {
+        padding:0.5rem 0.5rem; font-size:0.75rem;
       }
       #scoreChart {
-        width: 100%;
-        max-width: 320px;
-        margin: 0 auto;
+        width:100%; max-width:320px; margin:0 auto;
       }
       #scoreChart svg {
-        width:100%;
-        height:auto;
+        width:100%; height:auto;
       }
     }
   </style>
 </head>
 
-<body>
+<body class="bg-black text-white">
 
-<!-- SWIRLING GRADIENT -->
+<!-- 1) SWIRLING GRADIENT -->
 <div id="gradientBG"></div>
 
-<!-- STARFIELDS & RAIN -->
+<!-- 2) STARFIELDS & RAIN -->
 <div id="starfieldContainer">
   <canvas id="starfield1" class="starfield-canvas"></canvas>
   <canvas id="starfield2" class="starfield-canvas"></canvas>
@@ -350,21 +247,13 @@
 </div>
 <div id="starRainContainer"></div>
 
-<!-- HERO -->
+<!-- 3) HERO -->
 <section class="min-h-screen flex flex-col items-center justify-center px-4 text-center relative">
-  <h1 
-    id="heroTitle"
-    class="text-5xl md:text-6xl font-extrabold mb-4 auto-glow"
-  >
-    Smart Garbage Bin
-  </h1>
-  <span 
-    id="heroTyped"
-    class="text-lg md:text-2xl text-gray-300 mb-8 block max-w-xl mx-auto"
-  ></span>
+  <h1 id="heroTitle" class="text-5xl md:text-6xl font-extrabold mb-4 auto-glow">Smart Garbage Bin</h1>
+  <span id="heroTyped" class="text-lg md:text-2xl text-gray-300 mb-8 block max-w-xl mx-auto"></span>
 
   <img 
-    src="images/product1.jpeg" 
+    src="images/product1.jpeg"
     alt="Hero Product"
     class="w-64 h-64 object-cover rounded-lg mb-8"
     style="box-shadow: 0 0 20px rgba(255,255,255,0.3);"
@@ -382,41 +271,43 @@
 <!-- WAVE -->
 <div class="section-wave">
   <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
-    <path d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z" />
+    <path d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
   </svg>
 </div>
 
-<!-- PRODUCT SHOWCASE -->
+<!-- 4) PRODUCT SHOWCASE (Coverflow) -->
 <section id="productShowcase" class="py-16" data-aos="fade-right">
   <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-16 items-center">
+    <!-- left: coverflow track -->
     <div>
       <div class="coverflow-container" id="coverflowContainer">
         <div class="coverflow-track" id="coverflowTrack">
-          <!-- Slide 0 => video -->
+          <!-- Slide0 => video -->
           <div class="coverflow-slide" id="slide0">
-            <video 
-              preload="metadata" 
-              playsinline 
-              controls 
+            <video
+              preload="metadata"
+              playsinline
+              controls
               poster="images/videoposter.jpg"
             >
-              <source src="video/video.mp4" type="video/mp4"/>
+              <source src="video/video.mp4" type="video/mp4" />
             </video>
           </div>
-          <!-- Slide 1 => product2 -->
+          <!-- Slide1 => product2 -->
           <div class="coverflow-slide" id="slide1">
-            <img src="images/product2.jpeg" alt="Product 2" />
+            <img src="images/product2.jpeg" alt="Product 2"/>
           </div>
-          <!-- Slide 2 => product3 -->
+          <!-- Slide2 => product3 -->
           <div class="coverflow-slide" id="slide2">
-            <img src="images/product3.jpeg" alt="Product 3" />
+            <img src="images/product3.jpeg" alt="Product 3"/>
           </div>
         </div>
       </div>
+      <!-- thumbs + dots -->
       <div class="coverflow-thumbs mt-2">
-        <img src="images/videoposter.jpg" alt="ThumbVideo" onclick="goToCoverflow(0)"/>
-        <img src="images/product2.jpeg" alt="Thumb2" onclick="goToCoverflow(1)"/>
-        <img src="images/product3.jpeg" alt="Thumb3" onclick="goToCoverflow(2)"/>
+        <img src="images/videoposter.jpg" alt="ThumbVideo" onclick="goToCoverflow(0)" />
+        <img src="images/product2.jpeg" alt="Thumb2" onclick="goToCoverflow(1)" />
+        <img src="images/product3.jpeg" alt="Thumb3" onclick="goToCoverflow(2)" />
       </div>
       <div class="coverflow-dots" id="coverflowDots">
         <div class="coverflow-dot" onclick="goToCoverflow(0)"></div>
@@ -425,6 +316,7 @@
       </div>
     </div>
 
+    <!-- right: text description -->
     <div>
       <h2 class="text-3xl md:text-4xl font-bold mb-4 auto-glow">The Future of Waste</h2>
       <p class="text-gray-300 mb-4 leading-relaxed">
@@ -439,7 +331,7 @@
         <li>Advanced AI classification</li>
       </ul>
       <p class="text-sm text-gray-400">
-        Enjoy a futuristic approach to everyday disposal, 
+        Enjoy a futuristic approach to everyday disposal,
         while retaining human oversight for ultimate precision.
       </p>
     </div>
@@ -449,11 +341,11 @@
 <!-- WAVE -->
 <div class="section-wave">
   <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
-    <path d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z" />
+    <path d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
   </svg>
 </div>
 
-<!-- HOW IT WAS BUILT -->
+<!-- 5) HOW IT WAS BUILT (vertical timeline) -->
 <section id="howBuilt" class="py-16 bg-gray-900" data-aos="fade-up">
   <div class="max-w-5xl mx-auto px-4">
     <h2 class="text-3xl md:text-4xl font-bold mb-8 text-center auto-glow">How It Was Built</h2>
@@ -497,7 +389,7 @@
   </svg>
 </div>
 
-<!-- SCHEMATICS & PCBs -->
+<!-- 6) SCHEMATICS & PCBs -->
 <section id="schematicPCBs" class="py-16 text-center" data-aos="fade-up">
   <div class="max-w-6xl mx-auto px-4">
     <h2 class="text-3xl md:text-4xl font-bold mb-6 auto-glow">Schematics &amp; PCBs</h2>
@@ -505,7 +397,7 @@
       Two schematics shown side-by-side, plus PCBs that auto-flip every 3 seconds.
     </p>
 
-    <!-- Two Schematic Images side-by-side -->
+    <!-- Schematic images -->
     <div class="grid md:grid-cols-2 gap-8 mb-12">
       <div>
         <img 
@@ -572,7 +464,7 @@
   </svg>
 </div>
 
-<!-- SORTING GAME -->
+<!-- 7) SORTING GAME -->
 <section id="sortingMatters" class="py-16 bg-gray-900 relative" data-aos="fade-up">
   <div class="max-w-6xl mx-auto px-4">
     <h2 class="text-3xl md:text-4xl font-bold text-center mb-6 auto-glow">
@@ -580,7 +472,7 @@
     </h2>
     <p class="text-gray-300 text-center max-w-2xl mx-auto mb-12 leading-relaxed">
       Improper sorting contaminates recyclables and leads to more landfill waste.
-      Test your skills in this interactive game (with two-line item names!):
+      Test your skills in this interactive game:
     </p>
 
     <div class="bg-gray-800 p-6 rounded relative">
@@ -597,23 +489,17 @@
           >
             Start Game
           </button>
-          <canvas 
-            id="sortingGame"
-            width="600"
-            height="400"
-          ></canvas>
+          <canvas id="sortingGame" width="600" height="400"></canvas>
           <div class="flex space-x-6 mt-4">
             <button 
               id="moveLeftBtn"
-              class="bg-gray-700 text-white px-4 py-2 
-                     rounded font-bold"
+              class="bg-gray-700 text-white px-4 py-2 rounded font-bold"
             >
               &larr;
             </button>
             <button 
               id="moveRightBtn"
-              class="bg-gray-700 text-white px-4 py-2 
-                     rounded font-bold"
+              class="bg-gray-700 text-white px-4 py-2 rounded font-bold"
             >
               &rarr;
             </button>
@@ -621,12 +507,9 @@
         </div>
       </div>
 
-      <!-- Result -->
-      <div 
-        id="resultContainer"
-        class="hidden bg-gray-700 p-4 rounded"
-      >
-        <h3 
+      <!-- Result Container -->
+      <div id="resultContainer" class="hidden bg-gray-700 p-4 rounded">
+        <h3
           id="gameResult"
           class="text-xl font-bold text-center text-green-400 mb-4"
         ></h3>
@@ -659,17 +542,21 @@
         </div>
       </div>
 
-      <!-- History -->
-      <div 
-        id="scoreHistoryContainer"
-        class="hidden bg-gray-700 p-4 rounded mt-4"
-      >
+      <!-- Score History -->
+      <div id="scoreHistoryContainer" class="hidden bg-gray-700 p-4 rounded mt-4">
         <h3 class="text-xl font-bold mb-2 text-center">Score History</h3>
         <p class="text-gray-300 text-center text-sm mb-4">
-          A chart of your past results (out of 15). 
+          A chart of your past results (out of 15).
           <br/>We label each attempt "1st, 2nd, 3rd..."
         </p>
+        <!-- Chart container -->
         <div id="scoreChart" class="mx-auto" style="width:600px; height:300px;"></div>
+        <p 
+          id="noDataMsg"
+          class="text-center text-gray-400 mt-4 hidden"
+        >
+          No scores yet – finish a game first!
+        </p>
         <div class="flex justify-center mt-4 space-x-4">
           <button 
             id="backToGameBtn"
@@ -698,8 +585,8 @@
   </svg>
 </div>
 
-<!-- SPONSOR & DOWNLOAD -->
-<section class="py-16" data-aos="fade-up">
+<!-- 8) SPONSOR & DOWNLOAD -->
+<section class="py-16">
   <div class="max-w-3xl mx-auto text-center">
     <h2 class="text-3xl font-bold mb-6 auto-glow">Sponsor</h2>
     <div class="flex flex-col items-center gap-4 mb-8">
@@ -735,163 +622,132 @@
 </footer>
 
 <script>
-  /*******************************************************
-   AOS init
-  *******************************************************/
-  AOS.init({ duration: 1200, once: true });
+  /* =========== 1) AOS init =========== */
+  AOS.init({ duration:1200, once:true });
 
-  /*******************************************************
-   typed.js hero text
-  *******************************************************/
-  var typed = new Typed('#heroTyped', {
-    strings: [
+  /* =========== 2) typed hero text =========== */
+  var typed=new Typed('#heroTyped',{
+    strings:[
       "Revolutionize waste sorting with AI detection & confirmable compartments...",
       "Now with swirling gradient, transparent starfields, star rain, no forced mute video!",
       "Experience the FUTURE of disposal, now!"
     ],
-    typeSpeed: 40,
-    backSpeed: 30,
-    backDelay: 2000,
-    loop: true
+    typeSpeed:40,
+    backSpeed:30,
+    backDelay:2000,
+    loop:true
   });
 
-  /*******************************************************
-   STARFIELDS & RAIN
-  *******************************************************/
+  /* =========== 3) starfields + star rain =========== */
   gsap.registerPlugin(ScrollTrigger);
-
-  const c1 = document.getElementById("starfield1");
-  const ctx1 = c1.getContext("2d");
-  const c2 = document.getElementById("starfield2");
-  const ctx2 = c2.getContext("2d");
-  const c3 = document.getElementById("starfield3");
-  const ctx3 = c3.getContext("2d");
-  const c4 = document.getElementById("starfield4");
-  const ctx4 = c4.getContext("2d");
-
-  let starCount=400;
-  let stars1=[], stars2=[], stars3=[], stars4=[];
+  const c1=document.getElementById("starfield1"), ctx1=c1.getContext("2d");
+  const c2=document.getElementById("starfield2"), ctx2=c2.getContext("2d");
+  const c3=document.getElementById("starfield3"), ctx3=c3.getContext("2d");
+  const c4=document.getElementById("starfield4"), ctx4=c4.getContext("2d");
+  let starCount=400, s1=[], s2=[], s3=[], s4=[];
 
   function resizeAllStars(){
-    [c1, c2, c3, c4].forEach(cv => {
-      cv.width = window.innerWidth;
-      cv.height = window.innerHeight;
+    [c1,c2,c3,c4].forEach(cv=>{
+      cv.width=window.innerWidth; cv.height=window.innerHeight;
     });
-    stars1 = createStars(starCount, c1.width, c1.height, 0.4, 1.2);
-    stars2 = createStars(starCount, c2.width, c2.height, 0.7, 1.8);
-    stars3 = createStars(starCount, c3.width, c3.height, 1.0, 2.4);
-    stars4 = createStars(starCount, c4.width, c4.height, 1.3, 3.0);
+    s1=createStars(starCount,c1.width,c1.height,0.4,1.2);
+    s2=createStars(starCount,c2.width,c2.height,0.7,1.8);
+    s3=createStars(starCount,c3.width,c3.height,1.0,2.4);
+    s4=createStars(starCount,c4.width,c4.height,1.3,3.0);
   }
-  function createStars(count,w,h,speedMin,speedMax){
+  function createStars(count,w,h,sMin,sMax){
     let arr=[];
     for(let i=0;i<count;i++){
       arr.push({
-        x: Math.random()*w,
-        y: Math.random()*h,
-        size: Math.random()*3,
-        speed: speedMin + Math.random()*(speedMax-speedMin)
+        x:Math.random()*w,
+        y:Math.random()*h,
+        size:Math.random()*3,
+        speed:sMin+Math.random()*(sMax-sMin)
       });
     }
     return arr;
   }
   function animateStars(){
-    // layer1 => transparent starfield
+    // layer1
     ctx1.clearRect(0,0,c1.width,c1.height);
     ctx1.fillStyle="#fff";
-    for(let s of stars1){
-      s.y += s.speed;
-      if(s.y > c1.height) s.y=0;
-      ctx1.fillRect(s.x, s.y, s.size, s.size);
+    for(let st of s1){
+      st.y+=st.speed; if(st.y>c1.height) st.y=0;
+      ctx1.fillRect(st.x,st.y,st.size,st.size);
     }
     // layer2
     ctx2.clearRect(0,0,c2.width,c2.height);
     ctx2.fillStyle="#fff";
-    for(let s of stars2){
-      s.y += s.speed;
-      if(s.y > c2.height) s.y=0;
-      ctx2.fillRect(s.x, s.y, s.size, s.size);
+    for(let st of s2){
+      st.y+=st.speed; if(st.y>c2.height) st.y=0;
+      ctx2.fillRect(st.x,st.y,st.size,st.size);
     }
     // layer3
     ctx3.clearRect(0,0,c3.width,c3.height);
     ctx3.fillStyle="#fff";
-    for(let s of stars3){
-      s.y += s.speed;
-      if(s.y > c3.height) s.y=0;
-      ctx3.fillRect(s.x, s.y, s.size, s.size);
+    for(let st of s3){
+      st.y+=st.speed; if(st.y>c3.height) st.y=0;
+      ctx3.fillRect(st.x,st.y,st.size,st.size);
     }
     // layer4
     ctx4.clearRect(0,0,c4.width,c4.height);
     ctx4.fillStyle="#fff";
-    for(let s of stars4){
-      s.y += s.speed;
-      if(s.y > c4.height) s.y=0;
-      ctx4.fillRect(s.x, s.y, s.size, s.size);
+    for(let st of s4){
+      st.y+=st.speed; if(st.y>c4.height) st.y=0;
+      ctx4.fillRect(st.x,st.y,st.size,st.size);
     }
     requestAnimationFrame(animateStars);
   }
-  window.addEventListener("resize", resizeAllStars);
-  resizeAllStars();
-  animateStars();
+  window.addEventListener("resize",resizeAllStars);
+  resizeAllStars(); animateStars();
 
-  // star rain => random color stars falling from top
-  const starRainContainer = document.getElementById("starRainContainer");
+  // star rain
+  const starRainContainer=document.getElementById("starRainContainer");
   function spawnFallingStar(){
-    let st = document.createElement("span");
+    let st=document.createElement("span");
     st.classList.add("falling-star");
-    let colorArr=["#f0f","#0ff","#ff0","#fff","#f00","#0f0","#00f"];
-    st.style.color=colorArr[Math.floor(Math.random()*colorArr.length)];
     st.innerText="*";
+    let cArr=["#f0f","#0ff","#ff0","#fff","#f00","#0f0","#00f"];
+    st.style.color=cArr[Math.floor(Math.random()*cArr.length)];
     st.style.left=Math.random()*window.innerWidth+"px";
     starRainContainer.appendChild(st);
     setTimeout(()=>st.remove(),4000);
   }
-  setInterval(()=>{
-    if(Math.random()<0.6){
-      spawnFallingStar();
-    }
-  },600);
+  setInterval(()=>{ if(Math.random()<0.6) spawnFallingStar(); },600);
 
-  /*******************************************************
-   TIMELINE STEPS => GSAP Scroll
-  *******************************************************/
+  /* =========== 4) Timeline steps => GSAP scroll =========== */
   ["#timelineStep1","#timelineStep2","#timelineStep3","#timelineStep4"].forEach((sel,i)=>{
     gsap.from(sel,{
-      scrollTrigger:{
-        trigger:sel,
-        start:"top 80%"
-      },
+      scrollTrigger:{ trigger:sel, start:"top 80%" },
       duration:1.2,
-      x: i%2===0 ? -200 : 200,
+      x: i%2===0? -200:200,
       opacity:0,
       ease:"power2.out"
     });
   });
 
-  /*******************************************************
-   COVERFLOW => swipe logic + dots + video toggle
-  *******************************************************/
+  /* =========== 5) Coverflow logic =========== */
   let currentIndex=0;
   const slides=[
     document.getElementById("slide0"),
     document.getElementById("slide1"),
-    document.getElementById("slide2"),
+    document.getElementById("slide2")
   ];
   const dots=document.getElementById("coverflowDots").children;
   const coverflowContainer=document.getElementById("coverflowContainer");
 
   function updateCoverflow(){
-    for(let i=0; i<slides.length; i++){
-      let offset = i - currentIndex;
-      let s = slides[i];
-      s.style.transform = `
+    for(let i=0;i<slides.length;i++){
+      let offset=i-currentIndex;
+      slides[i].style.transform=`
         translateX(${offset*180}px)
         translateZ(${-Math.abs(offset)*180}px)
         rotateY(${offset*-20}deg)
         scale(${1 - Math.abs(offset)*0.1})
       `;
-      s.style.zIndex = slides.length - Math.abs(offset);
+      slides[i].style.zIndex=slides.length - Math.abs(offset);
     }
-    for(let j=0; j<dots.length; j++){
+    for(let j=0;j<dots.length;j++){
       dots[j].classList.remove("active");
     }
     dots[currentIndex].classList.add("active");
@@ -899,60 +755,40 @@
   slides.forEach((s,i)=>{
     s.addEventListener("click",()=>{
       if(i!==currentIndex){
-        currentIndex=i;
-        updateCoverflow();
+        currentIndex=i; updateCoverflow();
       } else {
         let vid=s.querySelector("video");
-        if(vid){
-          if(vid.paused) vid.play();
-          else vid.pause();
-        }
+        if(vid){ if(vid.paused) vid.play(); else vid.pause(); }
       }
     });
   });
-  function goToCoverflow(idx){
-    currentIndex=idx;
-    updateCoverflow();
-  }
-  window.goToCoverflow = goToCoverflow;
+  function goToCoverflow(idx){ currentIndex=idx; updateCoverflow(); }
+  window.goToCoverflow=goToCoverflow;
   updateCoverflow();
 
-  // swipe for mobile/touch
-  let startX=0, endX=0;
-  coverflowContainer.addEventListener("touchstart",(e)=>{
-    startX=e.touches[0].clientX;
-  });
-  coverflowContainer.addEventListener("touchmove",(e)=>{
-    endX=e.touches[0].clientX;
-  });
+  // swipe
+  let startX=0,endX=0;
+  coverflowContainer.addEventListener("touchstart",(e)=>startX=e.touches[0].clientX);
+  coverflowContainer.addEventListener("touchmove",(e)=>endX=e.touches[0].clientX);
   coverflowContainer.addEventListener("touchend",()=>{
-    let dx=endX - startX;
+    let dx=endX-startX;
     if(Math.abs(dx)>50){
-      if(dx<0){
-        currentIndex=(currentIndex+1)%slides.length;
-      } else {
-        currentIndex=(currentIndex-1+slides.length)%slides.length;
-      }
+      if(dx<0) currentIndex=(currentIndex+1)%slides.length;
+      else currentIndex=(currentIndex-1+slides.length)%slides.length;
       updateCoverflow();
     }
   });
 
-  /*******************************************************
-   AUTO-FLIP PCBs (every 3 seconds)
-  *******************************************************/
+  /* =========== 6) Auto-flip PCBs =========== */
   const pcb1=document.getElementById("pcb1");
   const pcb2=document.getElementById("pcb2");
-  let flipState1=false, flipState2=false;
+  let flip1=false, flip2=false;
   setInterval(()=>{
-    flipState1=!flipState1;
-    flipState2=!flipState2;
-    pcb1.classList.toggle("pcb-flipped", flipState1);
-    pcb2.classList.toggle("pcb-flipped", flipState2);
+    flip1=!flip1; pcb1.classList.toggle("pcb-flipped",flip1);
+    flip2=!flip2; pcb2.classList.toggle("pcb-flipped",flip2);
   },3000);
 
-  /*******************************************************
-   SORTING GAME => 2-line item approach if > 10 chars
-  *******************************************************/
+  /* =========== 7) SORTING GAME => 2-line item if space + phone chart + always show History =========== */
   const canvas=document.getElementById("sortingGame");
   const ctx=canvas.getContext("2d");
   const startGameBtn=document.getElementById("startGameBtn");
@@ -968,9 +804,9 @@
   const backToGameBtn=document.getElementById("backToGameBtn");
   const tryAgainBtn=document.getElementById("tryAgainBtn");
   const clearHistoryBtn=document.getElementById("clearHistoryBtn");
+  const noDataMsg=document.getElementById("noDataMsg");
 
-  let isPlaying=false, animationId;
-  let currentItemIndex=0, score=0;
+  let isPlaying=false, animationId, currentItemIndex=0, score=0;
   let itemsToDrop=[], resultDetails=[], currentItem=null;
   let itemTrack=1, itemY=-50, itemVY=2;
 
@@ -982,7 +818,6 @@
   ];
   const trackPositions=[75,225,375,525];
 
-  // 40 items in the pool
   const garbagePool=[
     { name:"Battery", type:"Hazardous" },
     { name:"Paint Can", type:"Hazardous" },
@@ -1025,19 +860,18 @@
     { name:"Junk Mail", type:"Recyclable" },
   ];
 
+  // Start game
   function initGame(){
     if(isPlaying)return;
     isPlaying=true;
-    score=0;
-    currentItemIndex=0;
-    resultDetails=[];
+    score=0; currentItemIndex=0; resultDetails=[];
     detailedResultsTbody.innerHTML="";
     resultContainer.classList.add("hidden");
     scoreHistoryContainer.classList.add("hidden");
     gameSection.classList.remove("hidden");
     gameResult.classList.add("hidden");
 
-    // pick 15 random items
+    // pick 15 random
     itemsToDrop=[];
     for(let i=0;i<15;i++){
       let pick=garbagePool[Math.floor(Math.random()*garbagePool.length)];
@@ -1047,21 +881,21 @@
     animateGame();
   }
   function loadNextItem(){
-    if(currentItemIndex >= itemsToDrop.length){
-      endGame();
+    if(currentItemIndex>=itemsToDrop.length){
+      endGame(); 
       return;
     }
-    currentItem = itemsToDrop[currentItemIndex];
+    currentItem=itemsToDrop[currentItemIndex];
     itemTrack=1;
     itemY=-50;
     itemVY=2+Math.random()*2;
   }
   function animateGame(){
-    animationId = requestAnimationFrame(animateGame);
+    animationId=requestAnimationFrame(animateGame);
     ctx.clearRect(0,0,600,400);
     drawBins();
     if(currentItem){
-      itemY += itemVY;
+      itemY+=itemVY;
       drawItem();
       if(itemY>=370){
         let assignedBin=bins[itemTrack].label;
@@ -1081,42 +915,41 @@
   function drawBins(){
     ctx.fillStyle="#666";
     ctx.fillRect(0,380,600,20);
-    for(let i=0; i<4; i++){
+    for(let i=0;i<4;i++){
       ctx.strokeStyle="#aaa";
       ctx.strokeRect(i*150,380,150,20);
       ctx.fillStyle="#fff";
       ctx.font="14px Poppins";
-      ctx.fillText(bins[i].label, i*150+10, 395);
+      ctx.fillText(bins[i].label,i*150+10,395);
     }
   }
 
-  // TWO-LINE approach for item names if longer than 10 characters
+  // If there's a space => line1/line2 else single line
+  // bounding box => 100×60
   function drawItem(){
-    const x = trackPositions[itemTrack];
-    // bigger bounding box => 100×60
+    const x=trackPositions[itemTrack];
     ctx.fillStyle="#ffe066";
-    ctx.fillRect(x - 50, itemY - 30, 100, 60);
-
+    ctx.fillRect(x-50,itemY-30,100,60);
+    
     ctx.fillStyle="#000";
     ctx.font="12px Poppins";
 
     let text=currentItem.name;
-    if(text.length <= 10) {
+    let spaceIndex=text.indexOf(" ");
+    if(spaceIndex===-1){
       // single line
-      const w=ctx.measureText(text).width;
-      ctx.fillText(text, x - w/2, itemY+5);
+      let w=ctx.measureText(text).width;
+      ctx.fillText(text, x-(w/2), itemY+5);
     } else {
-      // two lines => line1 = text.slice(0,10); line2 = rest (truncated if >10 chars)
-      const line1=text.slice(0,10);
-      let line2=text.slice(10);
-      if(line2.length>10) {
-        line2=line2.slice(0,7)+"...";
-      }
-      const w1=ctx.measureText(line1).width;
-      const w2=ctx.measureText(line2).width;
-      // line1 a bit above center, line2 a bit below center
-      ctx.fillText(line1, x - w1/2, itemY - 3);
-      ctx.fillText(line2, x - w2/2, itemY + 15);
+      // line1 => up to space
+      let line1=text.slice(0,spaceIndex);
+      // line2 => after space, truncated if too long
+      let line2=text.slice(spaceIndex+1);
+      if(line2.length>10) line2=line2.slice(0,7)+"...";
+      let w1=ctx.measureText(line1).width;
+      let w2=ctx.measureText(line2).width;
+      ctx.fillText(line1,x-(w1/2),itemY-3);
+      ctx.fillText(line2,x-(w2/2),itemY+15);
     }
   }
 
@@ -1128,7 +961,6 @@
     resultContainer.classList.remove("hidden");
     gameSection.classList.add("hidden");
 
-    // fill table
     resultDetails.forEach(r=>{
       let tr=document.createElement("tr");
       tr.innerHTML=`
@@ -1148,6 +980,7 @@
     saveScore(score);
     drawScoreChart();
   }
+
   function moveLeft(){ if(isPlaying) itemTrack=Math.max(0,itemTrack-1); }
   function moveRight(){ if(isPlaying) itemTrack=Math.min(3,itemTrack+1); }
   window.addEventListener("keydown",(e)=>{
@@ -1155,9 +988,9 @@
     if(e.key==="ArrowLeft") moveLeft();
     if(e.key==="ArrowRight") moveRight();
   });
-  moveLeftBtn.addEventListener("click", moveLeft);
-  moveRightBtn.addEventListener("click", moveRight);
-  startGameBtn.addEventListener("click", initGame);
+  moveLeftBtn.addEventListener("click",moveLeft);
+  moveRightBtn.addEventListener("click",moveRight);
+  startGameBtn.addEventListener("click",initGame);
 
   // Confetti
   function launchConfetti(count){
@@ -1181,8 +1014,10 @@
 
   // Show/hide History
   showHistoryBtn.addEventListener("click",()=>{
+    // always show container
     resultContainer.classList.add("hidden");
     scoreHistoryContainer.classList.remove("hidden");
+    drawScoreChart();
   });
   backToGameBtn.addEventListener("click",()=>{
     scoreHistoryContainer.classList.add("hidden");
@@ -1194,28 +1029,28 @@
     drawScoreChart();
   });
 
-  // Save + Chart => ordinal axis
+  // Save + draw chart
   function saveScore(sc){
     let arr=JSON.parse(localStorage.getItem("sortingScores")||"[]");
     arr.push(sc);
     localStorage.setItem("sortingScores",JSON.stringify(arr));
   }
-  function ordinalLabel(i){
-    // handle special 11,12,13 => 'th'
-    if(i%100>=11 && i%100<=13) return i+"th";
-    switch(i%10){
-      case 1: return i+"st";
-      case 2: return i+"nd";
-      case 3: return i+"rd";
-      default: return i+"th";
-    }
-  }
   function drawScoreChart(){
     let arr=JSON.parse(localStorage.getItem("sortingScores")||"[]");
     d3.select("#scoreChart").select("svg").remove();
-    if(arr.length===0) return;
 
-    let w=600, h=300, margin={top:20,right:20,bottom:30,left:40};
+    // No data => show noDataMsg
+    if(arr.length===0){
+      noDataMsg.classList.remove("hidden");
+      return;
+    } else {
+      noDataMsg.classList.add("hidden");
+    }
+
+    let container=document.getElementById("scoreChart");
+    let w=Math.min(container.clientWidth,600), h=300;
+    let margin={top:20,right:20,bottom:30,left:40};
+
     let svg=d3.select("#scoreChart").append("svg")
       .attr("width",w)
       .attr("height",h);
@@ -1224,9 +1059,20 @@
       .domain(d3.range(1,arr.length+1))
       .range([margin.left,w-margin.right])
       .padding(0.3);
+
     let y=d3.scaleLinear()
       .domain([0,15])
       .range([h-margin.bottom, margin.top]);
+
+    function ordinalLabel(i){
+      if(i%100>=11 && i%100<=13) return i+"th";
+      switch(i%10){
+        case 1:return i+"st";
+        case 2:return i+"nd";
+        case 3:return i+"rd";
+        default:return i+"th";
+      }
+    }
 
     let xAxis=d3.axisBottom(x).tickFormat(i=> ordinalLabel(+i));
     let yAxis=d3.axisLeft(y).ticks(5);
@@ -1258,7 +1104,7 @@
       .transition()
       .duration(2000)
       .ease(d3.easeLinear)
-      .attr("stroke-dashoffset", 0);
+      .attr("stroke-dashoffset",0);
 
     svg.selectAll(".scoreDot")
       .data(arr)
@@ -1272,7 +1118,9 @@
       .delay((d,i)=> i*100)
       .attr("opacity",1);
   }
-  drawScoreChart();
+
+  // typed hero text, starfields, etc. all loaded => done
 </script>
+
 </body>
 </html>
