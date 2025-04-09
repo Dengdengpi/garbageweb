@@ -87,7 +87,6 @@
       height: 100%;
       z-index: -9999;
       overflow: hidden;
-      /* no background color => transparent */
     }
     .starfield-canvas {
       position: absolute;
@@ -278,8 +277,7 @@
     }
 
     /* 
-      EXTRA media query for narrower history 
-      + no forced mute on video
+      EXTRA media query for narrower history
     */
     @media (max-width: 640px) {
       .coverflow-container {
@@ -313,7 +311,7 @@
       /* Also handle #scoreChart itself so it doesn't overflow */
       #scoreChart {
         width: 100%;
-        max-width: 320px; /* keep it narrower */
+        max-width: 320px; /* keep it narrower on phone */
         margin:0 auto;
       }
     }
@@ -763,10 +761,10 @@
       cv.width = window.innerWidth;
       cv.height = window.innerHeight;
     });
-    stars1=createStars(starCount, c1.width, c1.height, 0.4,1.2);
-    stars2=createStars(starCount, c2.width, c2.height, 0.7,1.8);
-    stars3=createStars(starCount, c3.width, c3.height, 1.0,2.4);
-    stars4=createStars(starCount, c4.width, c4.height, 1.3,3.0);
+    stars1 = createStars(starCount, c1.width, c1.height, 0.4, 1.2);
+    stars2 = createStars(starCount, c2.width, c2.height, 0.7, 1.8);
+    stars3 = createStars(starCount, c3.width, c3.height, 1.0, 2.4);
+    stars4 = createStars(starCount, c4.width, c4.height, 1.3, 3.0);
   }
   function createStars(count,w,h,speedMin,speedMax){
     let arr=[];
@@ -781,7 +779,7 @@
     return arr;
   }
   function animateStars(){
-    // layer1 => we do NOT fillRect with black, we just clearRect => transparent
+    // layer1 => transparent
     ctx1.clearRect(0,0,c1.width,c1.height);
     ctx1.fillStyle="#fff";
     for(let s of stars1){
@@ -825,9 +823,9 @@
     let st=document.createElement("span");
     st.classList.add("falling-star");
     st.innerText="*";
-    st.style.left=Math.random()*window.innerWidth+"px";
     let colorArr=["#f0f","#0ff","#ff0","#fff","#f00","#0f0","#00f"];
     st.style.color=colorArr[Math.floor(Math.random()*colorArr.length)];
+    st.style.left=Math.random()*window.innerWidth+"px";
     starRainContainer.appendChild(st);
     setTimeout(()=>st.remove(),4000);
   }
@@ -844,7 +842,7 @@
     gsap.from(sel,{
       scrollTrigger:{
         trigger:sel,
-        start:"top 80%",
+        start:"top 80%"
       },
       duration:1.2,
       x: i%2===0 ? -200 : 200,
@@ -890,7 +888,7 @@
       } else {
         let vid=s.querySelector("video");
         if(vid){
-          // toggle play/pause
+          // toggle
           if(vid.paused) vid.play(); else vid.pause();
         }
       }
@@ -903,7 +901,7 @@
   updateCoverflow();
 
   // swipe
-  let startX=0, endX=0;
+  let startX=0,endX=0;
   coverflowContainer.addEventListener("touchstart",(e)=>{
     startX=e.touches[0].clientX;
   });
@@ -938,8 +936,8 @@
   /*******************************************************
    SORTING GAME
   *******************************************************/
-  const gameCanvas=document.getElementById("sortingGame");
-  const ctx=gameCanvas.getContext("2d");
+  const canvas=document.getElementById("sortingGame");
+  const ctx=canvas.getContext("2d");
   const startGameBtn=document.getElementById("startGameBtn");
   const moveLeftBtn=document.getElementById("moveLeftBtn");
   const moveRightBtn=document.getElementById("moveRightBtn");
@@ -1061,7 +1059,7 @@
   function drawItem(){
     const x=trackPositions[itemTrack];
     ctx.fillStyle="#ffe066";
-    ctx.fillRect(x-35,itemY-20,70,40);
+    ctx.fillRect(x-35, itemY-20, 70, 40);
 
     ctx.fillStyle="#000";
     ctx.font="14px Poppins";
