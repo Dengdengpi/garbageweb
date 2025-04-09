@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- 
+    ULTRA-FANCY SMART GARBAGE BIN PAGE
+    - Quad (!) star backgrounds with multiple falling star effects
+    - Auto-flip PCBs every 3s
+    - Neon arrows (responsive on phones)
+    - Clear history button in the game
+    - GSAP + AOS + typed.js + wave dividers + much more
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Garbage Bin - Beyond the Galaxy</title>
+
+  <!-- Google Font: Poppins for a modern look -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- AOS for scroll animations -->
+  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css" />
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+
+  <!-- GSAP & ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+  <!-- typed.js for hero typed text effect -->
+  <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+
+  <!-- D3 for chart -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <style>
+    /* 
+      ====================================================
+      GLOBAL
+      ====================================================
+    */
+    * {
+      margin: 0; 
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      background: #000;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      overflow-x: hidden;
+    }
+    a {
+      text-decoration: none;
+    }
+
+    /* 
+      ====================================================
+      1) MULTI-LAYER STAR + STARFALL 
+      ====================================================
+      We'll have 4 layers of star canvases now (overkill).
+      Also separate "star-rain" div that spawns falling star <span> elements, 
+      so we have a "star fall from top" effect in addition to the canvases.
+    */
+    #starfieldContainer {
+      position: fixed;
+      top: 0; 
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -9999;
+      overflow: hidden;
+    }
+    .starfield-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; 
+      height: 100%;
+    }
+    /* The star-rain container for the "fall from top" star effect */
+    #starRainContainer {
+      pointer-events: none;
+      position: fixed;
+      top: 0; 
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -9998;
+      overflow: hidden;
+    }
+    .falling-star {
+      position: absolute;
+      font-size: 12px;
+      color: #fff;
+      animation: starFall 4s linear infinite;
+    }
+    @keyframes starFall {
+      0% {
+        transform: translateY(-50px);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(110vh);
+        opacity: 0;
+      }
+    }
+
+    /* 
+      TEXT STYLES 
+    */
+    .fancy-glow:hover {
+      text-shadow: 
+        0 0 6px rgba(255,255,255,0.9),
+        0 0 12px rgba(255,255,255,0.8),
+        0 0 20px rgba(224,54,255,0.9),
+        0 0 40px rgba(224,54,255,0.8);
+      transition: all 0.6s ease;
+      transform: scale(1.05);
+    }
+
+    /* 
+      SECTION WAVES 
+    */
+    .section-wave {
+      margin-top: -5px; 
+    }
+
+    /* 
+      ====================================================
+      2) COVERFLOW
+      ====================================================
+    */
+    .coverflow-container {
+      perspective: 1000px;
+      position: relative;
+      width: 100%; 
+      max-width: 340px; 
+      height: 260px; 
+      margin: 0 auto;
+      overflow: visible;
+    }
+    .coverflow-track {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      transform-style: preserve-3D;
+    }
+    .coverflow-slide {
+      width: 220px; 
+      height: 100%;
+      position: absolute;
+      top: 0; left: 50%;
+      margin-left: -110px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #111;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      cursor: pointer;
+      transition: transform 0.6s ease;
+    }
+    .coverflow-slide img,
+    .coverflow-slide video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .coverflow-thumbs,
+    .coverflow-dots {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .coverflow-thumbs img {
+      width: 48px; 
+      height: 48px; 
+      border-radius: 4px;
+      cursor: pointer;
+      transition: transform 0.2s;
+      object-fit: cover;
+    }
+    .coverflow-thumbs img:hover {
+      transform: scale(1.1);
+    }
+    .coverflow-dot {
+      width: 10px; 
+      height: 10px;
+      background: #444;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .coverflow-dot.active {
+      background: #fff;
+    }
+
+    /* 
+      ====================================================
+      3) SCHEMATIC ARROWS
+      - On mobile we reduce their size or move them above 
+    */
+    .schematic-slideshow {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      overflow: hidden;
+      border-radius: 8px;
+      position: relative;
+    }
+    .schematic-slide img {
+      max-height: 400px;
+      transition: transform 0.3s;
+      cursor: zoom-in;
+    }
+    .schematic-slide:hover img {
+      transform: scale(1.1);
+    }
+
+    .schematic-arrow {
+      position: absolute;
+      top: 50%;
+      width: 80px; 
+      height: 80px;
+      background: linear-gradient(135deg, #0ff, #48f);
+      color: #000; 
+      border: 2px solid #fff;
+      border-radius: 50%;
+      text-align: center; 
+      line-height: 76px;
+      font-weight: bold; 
+      font-size: 2.5rem;
+      box-shadow: 0 0 10px rgba(0,255,255,0.7);
+      transform: translateY(-50%);
+      z-index: 50;
+      transition: transform 0.4s;
+    }
+    .schematic-arrow:hover {
+      box-shadow: 0 0 30px rgba(0,255,255,1);
+      transform: translateY(-50%) rotate(20deg) scale(1.2);
+    }
+    #schematicArrowLeft {
+      left: -100px;
+    }
+    #schematicArrowRight {
+      right: -100px;
+    }
+
+    /* Smaller arrow for phone */
+    @media(max-width: 640px) {
+      .schematic-arrow {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+        line-height: 46px;
+      }
+      #schematicArrowLeft {
+        left: -70px;
+      }
+      #schematicArrowRight {
+        right: -70px;
+      }
+    }
+
+    /* 
+      ====================================================
+      4) PCBs 
+      We want them to auto-flip every 3 seconds 
+      AND on hover flip. We'll do a combination:
+      - A "flip-interval" that toggles a class 
+      - If user hovers, we do an immediate flip, etc.
+    */
+    .pcb-container {
+      perspective: 1000px;
+      width: 300px; 
+      height: 300px; 
+      margin: 0 auto;
+      position: relative;
+    }
+    .pcb-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transition: transform 1s;
+      transform-style: preserve-3D;
+    }
+    .pcb-front, .pcb-back {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      backface-visibility: hidden;
+    }
+    .pcb-back {
+      transform: rotateY(180deg);
+    }
+    /* This class will flip it automatically */
+    .pcb-flipped .pcb-inner {
+      transform: rotateY(180deg);
+    }
+    /* also on hover we can flip (if not overridden) */
+    .pcb-container:hover .pcb-inner {
+      transform: rotateY(180deg) !important;
+    }
+
+    /* 
+      ====================================================
+      5) SORTING GAME
+      Clear history button 
+    */
+    #sortingGame {
+      background: #222;
+      display: block;
+      margin: 0 auto;
+      border: 4px solid #666;
+      border-radius: 8px;
+    }
+    .confetti-container {
+      position: absolute; 
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+      overflow: hidden;
+    }
+    .confetti-piece {
+      position: absolute;
+      width: 10px; 
+      height: 10px;
+      background: red;
+      animation: confetti-fall 3s linear infinite;
+    }
+    @keyframes confetti-fall {
+      to {
+        transform: translateY(120vh) rotate(720deg);
+      }
+    }
+  </style>
+</head>
+<body>
+<!-- 
+  1) Quad starfield container 
+  plus a star-rain container for "fall from top"
+-->
+<div id="starfieldContainer">
+  <canvas id="starfield1" class="starfield-canvas"></canvas>
+  <canvas id="starfield2" class="starfield-canvas"></canvas>
+  <canvas id="starfield3" class="starfield-canvas"></canvas>
+  <canvas id="starfield4" class="starfield-canvas"></canvas>
+</div>
+
+<div id="starRainContainer"></div> <!-- falling stars here -->
+
+<!-- 
+  HERO 
+-->
+<section class="min-h-screen flex flex-col items-center justify-center px-4 text-center relative">
+  <h1 class="text-5xl md:text-6xl font-extrabold mb-4 fancy-glow">
+    Smart Garbage Bin
+  </h1>
+  <span id="heroTyped" class="text-lg md:text-2xl text-gray-300 mb-8 block max-w-xl mx-auto"></span>
+  <img 
+    src="images/product1.jpeg" 
+    alt="Hero Product"
+    class="w-64 h-64 object-cover rounded-lg mb-8"
+    style="box-shadow: 0 0 20px rgba(255,255,255,0.3);"
+  />
+  <a 
+    href="#productShowcase"
+    class="inline-block bg-gradient-to-r from-purple-500 to-indigo-500 px-8 py-4 
+           rounded-full font-bold text-white transform transition-all duration-300 hover:scale-110"
+    style="box-shadow: 0 0 15px rgba(128,0,255,0.5);"
+  >
+    Explore ↓
+  </a>
+</section>
+<!-- WAVE -->
+<div class="section-wave">
+  <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#000" fill-opacity="1" d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+  </svg>
+</div>
+
+<!-- 
+  2) PRODUCT SHOWCASE 
+-->
+<section id="productShowcase" class="py-16" data-aos="fade-right">
+  <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
+    <!-- coverflow -->
+    <div>
+      <div class="coverflow-container">
+        <div class="coverflow-track" id="coverflowTrack">
+          <div class="coverflow-slide" id="slide0">
+            <img src="images/product2.jpeg" alt="Product Shot 2" />
+          </div>
+          <div class="coverflow-slide" id="slide1">
+            <img src="images/product3.jpeg" alt="Product Shot 3" />
+          </div>
+          <div class="coverflow-slide" id="slide2">
+            <video controls poster="images/videoposter.jpg">
+              <source src="video/video.mp4" type="video/mp4" />
+            </video>
+          </div>
+        </div>
+      </div>
+      <!-- thumbnails & dots -->
+      <div class="coverflow-thumbs mt-2">
+        <img src="images/product2.jpeg" alt="Thumb1" onclick="goToCoverflow(0)" />
+        <img src="images/product3.jpeg" alt="Thumb2" onclick="goToCoverflow(1)" />
+        <img src="images/videoposter.jpg" alt="Thumb3" onclick="goToCoverflow(2)" />
+      </div>
+      <div class="coverflow-dots" id="coverflowDots">
+        <div class="coverflow-dot" onclick="goToCoverflow(0)"></div>
+        <div class="coverflow-dot" onclick="goToCoverflow(1)"></div>
+        <div class="coverflow-dot" onclick="goToCoverflow(2)"></div>
+      </div>
+    </div>
+
+    <!-- text -->
+    <div>
+      <h2 class="text-3xl md:text-4xl font-bold mb-4 fancy-glow">The Future of Waste</h2>
+      <p class="text-gray-300 mb-4 leading-relaxed">
+        This bin uses a K210 chip to classify waste in real-time,
+        but you can confirm or override its choice if needed – ensuring accuracy. 
+        With advanced coverflow product views, you can see product pics or a video in style.
+      </p>
+      <ul class="list-disc list-inside text-gray-300 mb-4">
+        <li>Modern servo compartments</li>
+        <li>Minimal footprint design</li>
+        <li>Long-lasting build</li>
+        <li>Advanced AI classification</li>
+      </ul>
+      <p class="text-sm text-gray-400">
+        Enjoy a futuristic approach to everyday disposal, 
+        while retaining human oversight for ultimate precision.
+      </p>
+    </div>
+  </div>
+</section>
+<!-- wave -->
+<div class="section-wave">
+  <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#111" fill-opacity="1" d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+  </svg>
+</div>
+
+<!-- 
+  3) HOW IT WAS BUILT 
+-->
+<section id="howBuilt" class="py-16 bg-gray-900" data-aos="fade-up">
+  <div class="max-w-5xl mx-auto px-4">
+    <h2 class="text-3xl md:text-4xl font-bold mb-8 text-center fancy-glow">
+      How It Was Built
+    </h2>
+    <div class="border-l-4 border-purple-400 pl-4 space-y-8">
+      <div id="timelineStep1">
+        <h3 class="text-xl font-bold mb-2">1. Research &amp; Planning</h3>
+        <p class="text-gray-300 leading-relaxed">
+          Investigated sensor feasibility, tested AI modules,
+          and planned confirmable compartments.
+        </p>
+      </div>
+      <div id="timelineStep2">
+        <h3 class="text-xl font-bold mb-2">2. Electronics &amp; PCB</h3>
+        <p class="text-gray-300 leading-relaxed">
+          Created circuit schematics, fabricated PCBs, integrated
+          Arduino &amp; Maix Bit for real-time classification.
+        </p>
+      </div>
+      <div id="timelineStep3">
+        <h3 class="text-xl font-bold mb-2">3. AI Model Tuning</h3>
+        <p class="text-gray-300 leading-relaxed">
+          Trained on typical wastes, tested inference speed,
+          and optimized the model for K210.
+        </p>
+      </div>
+      <div id="timelineStep4">
+        <h3 class="text-xl font-bold mb-2">4. Final Assembly</h3>
+        <p class="text-gray-300 leading-relaxed">
+          Mounted hardware, validated sensor data,
+          and refined software logic for reliable detection.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- wave -->
+<div class="section-wave">
+  <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#000" fill-opacity="1" d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+  </svg>
+</div>
+
+<!-- 
+  4) SCHEMATICS & PCBs 
+-->
+<section id="schematicPCBs" class="py-16 text-center" data-aos="fade-up">
+  <div class="max-w-6xl mx-auto px-4">
+    <h2 class="text-3xl md:text-4xl font-bold mb-6 fancy-glow">Schematics &amp; PCBs</h2>
+    <p class="text-gray-300 max-w-xl mx-auto mb-8">
+      Giant neon arrow icons for <strong>mobile + desktop</strong>, auto-flip PCBs every 3 seconds, 
+      and flip on hover too.
+    </p>
+
+    <!-- Schematic slideshow (2 slides) -->
+    <div class="relative schematic-slideshow mb-12">
+      <div id="schematicArrowLeft" class="schematic-arrow">&larr;</div>
+      <div id="schematicTrack" class="flex w-[200%] transition-transform duration-500">
+        <div class="schematic-slide w-1/2 flex items-center justify-center">
+          <img src="images/schematic-arduino.png" alt="Arduino Schematic"/>
+        </div>
+        <div class="schematic-slide w-1/2 flex items-center justify-center">
+          <img src="images/schematic-maix.png" alt="Maix Bit Schematic"/>
+        </div>
+      </div>
+      <div id="schematicArrowRight" class="schematic-arrow">&rarr;</div>
+    </div>
+
+    <!-- PCBs auto flip -->
+    <div class="flex flex-wrap justify-center gap-8">
+      <div class="pcb-container" id="pcb1">
+        <div class="pcb-inner">
+          <div class="pcb-front bg-gray-900 flex items-center justify-center">
+            <img 
+              src="images/pcb1-front.png"
+              alt="PCB1 Front"
+              class="max-w-full max-h-full object-contain"
+            />
+          </div>
+          <div class="pcb-back bg-gray-800 flex items-center justify-center">
+            <img 
+              src="images/pcb1-back.png"
+              alt="PCB1 Back"
+              class="max-w-full max-h-full object-contain"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="pcb-container" id="pcb2">
+        <div class="pcb-inner">
+          <div class="pcb-front bg-gray-900 flex items-center justify-center">
+            <img 
+              src="images/pcb2-front.png"
+              alt="PCB2 Front"
+              class="max-w-full max-h-full object-contain"
+            />
+          </div>
+          <div class="pcb-back bg-gray-800 flex items-center justify-center">
+            <img 
+              src="images/pcb2-back.png"
+              alt="PCB2 Back"
+              class="max-w-full max-h-full object-contain"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- wave -->
+<div class="section-wave">
+  <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#111" fill-opacity="1" d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+  </svg>
+</div>
+
+<!-- 
+  5) SORTING GAME 
+-->
+<section id="sortingMatters" class="py-16 bg-gray-900 relative" data-aos="fade-up">
+  <div class="max-w-6xl mx-auto px-4">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-6 fancy-glow">
+      Why Sorting Matters
+    </h2>
+    <p class="text-gray-300 text-center max-w-2xl mx-auto mb-12 leading-relaxed">
+      Improper sorting contaminates recyclables and leads to more landfill waste.
+      Test your skills in this interactive game:
+    </p>
+
+    <div class="bg-gray-800 p-6 rounded relative">
+      <div class="confetti-container" id="confetti"></div>
+
+      <!-- Game UI -->
+      <div id="gameSection">
+        <h3 class="text-2xl font-bold text-center mb-4">Sorting Challenge</h3>
+        <div class="flex flex-col items-center mb-6">
+          <button 
+            id="startGameBtn"
+            class="bg-purple-500 hover:bg-purple-600 text-white px-8 py-3 
+                   rounded font-bold mb-4"
+          >
+            Start Game
+          </button>
+          <canvas 
+            id="sortingGame"
+            width="600"
+            height="400"
+          ></canvas>
+          <div class="flex space-x-6 mt-4">
+            <button 
+              id="moveLeftBtn"
+              class="bg-gray-700 text-white px-4 py-2 
+                     rounded font-bold"
+            >
+              &larr;
+            </button>
+            <button 
+              id="moveRightBtn"
+              class="bg-gray-700 text-white px-4 py-2 
+                     rounded font-bold"
+            >
+              &rarr;
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div 
+        id="resultContainer"
+        class="hidden bg-gray-700 p-4 rounded"
+      >
+        <h3 
+          id="gameResult"
+          class="text-xl font-bold text-center text-green-400 mb-4"
+        ></h3>
+        <table class="w-full text-left text-sm bg-gray-600 rounded">
+          <thead>
+            <tr class="bg-gray-500">
+              <th class="py-2 px-2">Item</th>
+              <th class="py-2 px-2">Correct Bin</th>
+              <th class="py-2 px-2">Your Bin</th>
+              <th class="py-2 px-2">Result</th>
+            </tr>
+          </thead>
+          <tbody id="detailedResults"></tbody>
+        </table>
+        <div class="flex justify-center mt-4">
+          <button 
+            id="showHistoryBtn"
+            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 mx-2 
+                   rounded font-bold"
+          >
+            Show History
+          </button>
+          <button
+            id="tryAgainBtn"
+            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 mx-2
+                   rounded font-bold"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div id="scoreHistoryContainer" class="hidden bg-gray-700 p-4 rounded mt-4">
+        <h3 class="text-xl font-bold mb-2 text-center">Score History</h3>
+        <p class="text-gray-300 text-center text-sm mb-4">
+          A chart of your past results (out of 15). Data is stored in your browser.
+        </p>
+        <div id="scoreChart" class="mx-auto" style="width:600px; height:300px;"></div>
+        <div class="flex justify-center mt-4 space-x-4">
+          <button 
+            id="backToGameBtn"
+            class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 
+                   rounded font-bold"
+          >
+            Back to Results
+          </button>
+          <button 
+            id="clearHistoryBtn"
+            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 
+                   rounded font-bold"
+          >
+            Clear History
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- wave -->
+<div class="section-wave">
+  <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#000" fill-opacity="1" d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+  </svg>
+</div>
+
+<!-- 
+  6) SPONSOR & DOWNLOAD 
+-->
+<section class="py-16" data-aos="fade-up">
+  <div class="max-w-3xl mx-auto text-center">
+    <h2 class="text-3xl font-bold mb-6 fancy-glow">Sponsor</h2>
+    <div class="flex flex-col items-center gap-4 mb-8">
+      <img 
+        src="images/sponsor.jpg"
+        class="w-32 h-32 rounded-full border-4 border-white shadow"
+        alt="Sponsor"
+      />
+      <p class="text-xl font-semibold">Mr. Green</p>
+      <p class="text-gray-400">Main Supporter &amp; Advisor</p>
+    </div>
+    <h2 class="text-3xl font-bold mb-4 fancy-glow">Download Source Code</h2>
+    <a 
+      href="download/smart-bin-code.zip"
+      download
+      class="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-8 py-3 
+             rounded-full text-lg font-bold hover:opacity-80 transition inline-block"
+      style="box-shadow: 0 0 15px rgba(0,0,255,0.5);"
+    >
+      Download ZIP
+    </a>
+    <p class="mt-4 text-gray-400">
+      or see 
+      <a href="https://github.com/yourrepo" class="underline text-blue-400">
+        GitHub Repo
+      </a>
+    </p>
+  </div>
+</section>
+
+<footer class="px-6 py-6 text-center text-sm text-gray-500 bg-black">
+  Made with 🧠 + 💻 by [YourName] | © 2025 Smart Bin Project
+</footer>
+
+<script>
+  /*******************************************************
+   * 1) AOS
+   *******************************************************/
+  AOS.init({ duration: 1200, once: true });
+
+  /*******************************************************
+   * 2) TYPED HERO TEXT
+   *******************************************************/
+  var typed = new Typed('#heroTyped', {
+    strings: [
+      "Revolutionize waste sorting with AI detection & confirmable compartments...",
+      "Falling stars, neon arrows, auto-flip PCBs... we have it all!",
+      "Experience the FUTURE of garbage disposal, now!"
+    ],
+    typeSpeed: 40,
+    backSpeed: 30,
+    backDelay: 2000,
+    loop: true
+  });
+
+  /*******************************************************
+   * 3) STARFIELDS + STAR RAIN
+   *******************************************************/
+  gsap.registerPlugin(ScrollTrigger);
+
+  const c1 = document.getElementById("starfield1");
+  const ctx1 = c1.getContext("2d");
+  const c2 = document.getElementById("starfield2");
+  const ctx2 = c2.getContext("2d");
+  const c3 = document.getElementById("starfield3");
+  const ctx3 = c3.getContext("2d");
+  const c4 = document.getElementById("starfield4");
+  const ctx4 = c4.getContext("2d");
+
+  let stars1=[], stars2=[], stars3=[], stars4=[];
+  let starCount = 150;
+
+  function resizeAllStars(){
+    [c1,c2,c3,c4].forEach(cv=>{
+      cv.width = window.innerWidth;
+      cv.height = window.innerHeight;
+    });
+    stars1 = createStars(starCount, c1.width, c1.height, 0.3, 1.0);
+    stars2 = createStars(starCount, c2.width, c2.height, 0.6, 1.5);
+    stars3 = createStars(starCount, c3.width, c3.height, 0.9, 2.2);
+    stars4 = createStars(starCount, c4.width, c4.height, 1.2, 3.0);
+  }
+  function createStars(count, w, h, speedMin, speedMax){
+    let arr = [];
+    for(let i=0; i<count; i++){
+      arr.push({
+        x: Math.random()*w,
+        y: Math.random()*h,
+        size: Math.random()*2,
+        speed: speedMin + Math.random()*(speedMax - speedMin)
+      });
+    }
+    return arr;
+  }
+  function animateStars(){
+    // layer 1
+    ctx1.clearRect(0,0,c1.width,c1.height);
+    ctx1.fillStyle = "#fff";
+    for(let s of stars1){
+      s.y += s.speed;
+      if(s.y > c1.height) s.y=0;
+      ctx1.fillRect(s.x, s.y, s.size, s.size);
+    }
+    // layer 2
+    ctx2.clearRect(0,0,c2.width,c2.height);
+    ctx2.fillStyle = "#fff";
+    for(let s of stars2){
+      s.y += s.speed;
+      if(s.y > c2.height) s.y=0;
+      ctx2.fillRect(s.x, s.y, s.size, s.size);
+    }
+    // layer 3
+    ctx3.clearRect(0,0,c3.width,c3.height);
+    ctx3.fillStyle = "#fff";
+    for(let s of stars3){
+      s.y += s.speed;
+      if(s.y>c3.height) s.y=0;
+      ctx3.fillRect(s.x, s.y, s.size, s.size);
+    }
+    // layer 4
+    ctx4.clearRect(0,0,c4.width,c4.height);
+    ctx4.fillStyle = "#fff";
+    for(let s of stars4){
+      s.y += s.speed;
+      if(s.y>c4.height) s.y=0;
+      ctx4.fillRect(s.x, s.y, s.size, s.size);
+    }
+    requestAnimationFrame(animateStars);
+  }
+  window.addEventListener("resize", resizeAllStars);
+  resizeAllStars();
+  animateStars();
+
+  // STAR RAIN - spawn falling <span> of "*"
+  const starRainContainer = document.getElementById("starRainContainer");
+  function spawnFallingStar(){
+    let st = document.createElement("span");
+    st.classList.add("falling-star");
+    st.innerText = "*"; 
+    let startX = Math.random()*window.innerWidth;
+    st.style.left = startX + "px";
+    starRainContainer.appendChild(st);
+    setTimeout(()=> st.remove(), 4000);
+  }
+  setInterval(()=>{
+    if(Math.random()<0.5){
+      spawnFallingStar();
+    }
+  }, 500);
+
+  /*******************************************************
+   * 4) GSAP SCROLL ANIM 
+   *******************************************************/
+  // timeline steps
+  ["#timelineStep1","#timelineStep2","#timelineStep3","#timelineStep4"].forEach((sel,i)=>{
+    gsap.from(sel, {
+      scrollTrigger: {
+        trigger: sel,
+        start: "top 80%",
+      },
+      duration: 1.2,
+      x: i%2===0 ? -200 : 200,
+      opacity: 0,
+      ease: "power2.out"
+    });
+  });
+
+  /*******************************************************
+   * 5) COVERFLOW
+   *******************************************************/
+  let currentIndex = 0;
+  const slides = [
+    document.getElementById("slide0"),
+    document.getElementById("slide1"),
+    document.getElementById("slide2"),
+  ];
+  const dots = document.getElementById("coverflowDots").children;
+  function updateCoverflow(){
+    for(let i=0; i<slides.length; i++){
+      let offset = i - currentIndex;
+      let slide = slides[i];
+      slide.style.transform = `
+        translateX(${offset*180}px)
+        translateZ(${-Math.abs(offset)*180}px)
+        rotateY(${offset*-20}deg)
+        scale(${1 - Math.abs(offset)*0.1})
+      `;
+      slide.style.zIndex = slides.length - Math.abs(offset);
+    }
+    for(let j=0; j<dots.length; j++){
+      dots[j].classList.remove("active");
+    }
+    dots[currentIndex].classList.add("active");
+  }
+  slides.forEach((s, i)=>{
+    s.addEventListener("click", ()=>{
+      if(i !== currentIndex){
+        currentIndex = i;
+        updateCoverflow();
+      } else {
+        let vid = s.querySelector("video");
+        if(vid){
+          if(vid.paused) vid.play();
+          else vid.pause();
+        }
+      }
+    });
+  });
+  function goToCoverflow(idx){
+    currentIndex=idx; updateCoverflow();
+  }
+  updateCoverflow();
+
+  /*******************************************************
+   * 6) SCHEMATICS ARROWS
+   *******************************************************/
+  let schematicIndex=0;
+  const schematicTrack=document.getElementById("schematicTrack");
+  function updateSchematic(){
+    schematicTrack.style.transform=`translateX(${schematicIndex*-50}%)`;
+  }
+  document.getElementById("schematicArrowLeft").addEventListener("click", ()=>{
+    schematicIndex=(schematicIndex-1+2)%2; updateSchematic();
+  });
+  document.getElementById("schematicArrowRight").addEventListener("click", ()=>{
+    schematicIndex=(schematicIndex+1)%2; updateSchematic();
+  });
+
+  /*******************************************************
+   * 7) AUTO-FLIP PCBs EVERY 3s
+   *******************************************************/
+  const pcb1=document.getElementById("pcb1");
+  const pcb2=document.getElementById("pcb2");
+  let flipState1=false, flipState2=false;
+  setInterval(()=>{
+    flipState1=!flipState1;
+    flipState2=!flipState2;
+    if(flipState1){
+      pcb1.classList.add("pcb-flipped");
+    } else {
+      pcb1.classList.remove("pcb-flipped");
+    }
+    if(flipState2){
+      pcb2.classList.add("pcb-flipped");
+    } else {
+      pcb2.classList.remove("pcb-flipped");
+    }
+  },3000);
+
+  /*******************************************************
+   * 8) SORTING GAME
+   *******************************************************/
+  const canvas=document.getElementById("sortingGame");
+  const ctx=canvas.getContext("2d");
+  const startGameBtn=document.getElementById("startGameBtn");
+  const moveLeftBtn=document.getElementById("moveLeftBtn");
+  const moveRightBtn=document.getElementById("moveRightBtn");
+  const resultContainer=document.getElementById("resultContainer");
+  const gameSection=document.getElementById("gameSection");
+  const gameResult=document.getElementById("gameResult");
+  const detailedResultsTbody=document.getElementById("detailedResults");
+  const confettiContainer=document.getElementById("confetti");
+  const showHistoryBtn=document.getElementById("showHistoryBtn");
+  const scoreHistoryContainer=document.getElementById("scoreHistoryContainer");
+  const backToGameBtn=document.getElementById("backToGameBtn");
+  const tryAgainBtn=document.getElementById("tryAgainBtn");
+  const clearHistoryBtn=document.getElementById("clearHistoryBtn");
+
+  let isPlaying=false, animationId;
+  let currentItemIndex=0, score=0, itemsToDrop=[];
+  let currentItem=null, itemTrack=1, itemY=-50, itemVY=2;
+  let resultDetails=[];
+
+  const bins=[
+    { label:"Hazardous", track:0 },
+    { label:"Kitchen", track:1 },
+    { label:"Recyclable", track:2 },
+    { label:"Other", track:3 }
+  ];
+  const trackPositions=[75,225,375,525];
+
+  const garbagePool=[
+    { name:"Battery", type:"Hazardous" },{ name:"PaintCan", type:"Hazardous" },
+    { name:"AppleCore", type:"Kitchen" },{ name:"BananaPeel", type:"Kitchen" },
+    { name:"PlasticBottle", type:"Recyclable" },{ name:"AluminumCan", type:"Recyclable" },
+    { name:"CigaretteButt", type:"Other" },{ name:"Tissue", type:"Other" },
+    { name:"GlassBottle", type:"Recyclable" },{ name:"Styrofoam", type:"Other" },
+    { name:"EggShell", type:"Kitchen" },{ name:"PaperCup", type:"Recyclable" },
+    { name:"SteelCan", type:"Recyclable" },{ name:"ChipBag", type:"Other" },
+    { name:"PaperPlate", type:"Kitchen" },{ name:"OilBottle", type:"Hazardous" },
+    { name:"PrinterCartridge", type:"Hazardous" },{ name:"LeftoverFood", type:"Kitchen" },
+    { name:"WineCork", type:"Other" },{ name:"PlasticStraw", type:"Recyclable" },
+    { name:"CardboardBox", type:"Recyclable" },{ name:"LightBulb", type:"Hazardous" },
+    { name:"TeaBag", type:"Kitchen" },{ name:"PlasticCutlery", type:"Recyclable" },
+    { name:"BrokenCeramic", type:"Other" },{ name:"MedicationBottle", type:"Hazardous" },
+    { name:"ExpiredPills", type:"Hazardous" },{ name:"OrangePeel", type:"Kitchen" },
+    { name:"PaperTowel", type:"Other" },{ name:"CandyWrapper", type:"Other" },
+    { name:"MilkCarton", type:"Recyclable" },{ name:"PizzaBox", type:"Kitchen" },
+    { name:"CoconutShell", type:"Kitchen" },{ name:"PlasticBag", type:"Recyclable" },
+    { name:"DisposableMask", type:"Other" },{ name:"LithiumBattery", type:"Hazardous" },
+    { name:"JuiceBox", type:"Recyclable" },{ name:"CoffeeGrounds", type:"Kitchen" },
+    { name:"Tire", type:"Hazardous" },{ name:"FabricScrap", type:"Other" },
+  ];
+
+  function initGame(){
+    if(isPlaying) return;
+    isPlaying=true;
+    score=0; currentItemIndex=0; resultDetails=[];
+    detailedResultsTbody.innerHTML="";
+    resultContainer.classList.add("hidden");
+    scoreHistoryContainer.classList.add("hidden");
+    gameSection.classList.remove("hidden");
+    gameResult.classList.add("hidden");
+
+    itemsToDrop=[];
+    for(let i=0; i<15; i++){
+      let pick=garbagePool[Math.floor(Math.random()*garbagePool.length)];
+      itemsToDrop.push(pick);
+    }
+    loadNextItem();
+    animateGame();
+  }
+  function loadNextItem(){
+    if(currentItemIndex>=itemsToDrop.length){
+      endGame();
+      return;
+    }
+    currentItem=itemsToDrop[currentItemIndex];
+    itemTrack=1; itemY=-50;
+    itemVY=2+Math.random()*2;
+  }
+  function animateGame(){
+    animationId=requestAnimationFrame(animateGame);
+    ctx.clearRect(0,0,600,400);
+    drawBins();
+    if(currentItem){
+      itemY+=itemVY;
+      drawItem();
+      if(itemY>=370){
+        let assignedBin=bins[itemTrack].label;
+        let correct=(assignedBin===currentItem.type);
+        if(correct) score++;
+        resultDetails.push({
+          itemName: currentItem.name,
+          correctBin: currentItem.type,
+          yourBin: assignedBin,
+          isCorrect: correct
+        });
+        currentItemIndex++;
+        loadNextItem();
+      }
+    }
+  }
+  function drawBins(){
+    ctx.fillStyle="#666";
+    ctx.fillRect(0,380,600,20);
+    for(let i=0; i<4; i++){
+      ctx.strokeStyle="#aaa";
+      ctx.strokeRect(i*150,380,150,20);
+      ctx.fillStyle="#fff";
+      ctx.font="14px Poppins";
+      ctx.fillText(bins[i].label,i*150+10,395);
+    }
+  }
+  function drawItem(){
+    const x=trackPositions[itemTrack];
+    ctx.fillStyle="#ffe066";
+    ctx.fillRect(x-35,itemY-20,70,40);
+
+    ctx.fillStyle="#000";
+    ctx.font="14px Poppins";
+    let text=currentItem.name;
+    let w=ctx.measureText(text).width;
+    if(w>60){
+      while(ctx.measureText(text+"...").width>60 && text.length>0){
+        text=text.slice(0,-1);
+      }
+      text+="...";
+    }
+    ctx.fillText(text,x-(ctx.measureText(text).width/2),itemY+5);
+  }
+  function endGame(){
+    cancelAnimationFrame(animationId);
+    isPlaying=false;
+    gameResult.innerText=`You sorted ${score} out of 15 correctly!`;
+    gameResult.classList.remove("hidden");
+    resultContainer.classList.remove("hidden");
+    gameSection.classList.add("hidden");
+    resultDetails.forEach(r=>{
+      let tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td class="py-1 px-2 border-b border-gray-600">${r.itemName}</td>
+        <td class="py-1 px-2 border-b border-gray-600">${r.correctBin}</td>
+        <td class="py-1 px-2 border-b border-gray-600">${r.yourBin}</td>
+        <td class="py-1 px-2 border-b border-gray-600 ${
+          r.isCorrect?'text-green-400':'text-red-400'
+        }">
+          ${r.isCorrect?'Correct':'Wrong'}
+        </td>
+      `;
+      detailedResultsTbody.appendChild(tr);
+    });
+    if(score>=10) launchConfetti(100);
+    saveScoreHistory(score);
+    drawScoreChart();
+  }
+
+  function moveLeft(){
+    if(!isPlaying)return;
+    itemTrack=Math.max(0,itemTrack-1);
+  }
+  function moveRight(){
+    if(!isPlaying)return;
+    itemTrack=Math.min(3,itemTrack+1);
+  }
+  window.addEventListener("keydown",e=>{
+    if(!isPlaying)return;
+    if(e.key==="ArrowLeft") moveLeft();
+    if(e.key==="ArrowRight") moveRight();
+  });
+  moveLeftBtn.addEventListener("click",moveLeft);
+  moveRightBtn.addEventListener("click",moveRight);
+  startGameBtn.addEventListener("click",initGame);
+
+  // confetti
+  function launchConfetti(count){
+    for(let i=0; i<count; i++){
+      createConfettiPiece();
+    }
+  }
+  function createConfettiPiece(){
+    let d=document.createElement("div");
+    d.classList.add("confetti-piece");
+    d.style.left=Math.random()*100+"%";
+    d.style.backgroundColor=randomColor();
+    d.style.transform=`rotate(${Math.random()*360}deg)`;
+    confettiContainer.appendChild(d);
+    setTimeout(()=>d.remove(),3000);
+  }
+  function randomColor(){
+    let colors=["#f00","#0f0","#00f","#ff0","#0ff","#f0f","#fff"];
+    return colors[Math.floor(Math.random()*colors.length)];
+  }
+
+  // results & history
+  showHistoryBtn.addEventListener("click",()=>{
+    resultContainer.classList.add("hidden");
+    scoreHistoryContainer.classList.remove("hidden");
+  });
+  backToGameBtn.addEventListener("click",()=>{
+    scoreHistoryContainer.classList.add("hidden");
+    resultContainer.classList.remove("hidden");
+  });
+  tryAgainBtn.addEventListener("click",()=>{
+    initGame();
+  });
+  clearHistoryBtn.addEventListener("click",()=>{
+    localStorage.removeItem("sortingGameScores");
+    drawScoreChart(); // clears the chart
+  });
+
+  // local storage
+  function saveScoreHistory(sc){
+    let arr=JSON.parse(localStorage.getItem("sortingGameScores")||"[]");
+    arr.push({date:new Date().toISOString(),score:sc});
+    localStorage.setItem("sortingGameScores",JSON.stringify(arr));
+  }
+  function drawScoreChart(){
+    let arr=JSON.parse(localStorage.getItem("sortingGameScores")||"[]");
+    d3.select("#scoreChart").select("svg").remove();
+    if(arr.length===0) return; 
+    arr.forEach(d=> d.parsedDate=new Date(d.date));
+    arr.sort((a,b)=> a.parsedDate-b.parsedDate);
+
+    const w=600, h=300, margin={top:20,right:20,bottom:30,left:40};
+    let svg=d3.select("#scoreChart").append("svg")
+      .attr("width",w)
+      .attr("height",h);
+    let x=d3.scaleTime()
+      .domain(d3.extent(arr,d=>d.parsedDate))
+      .range([margin.left,w-margin.right]);
+    let y=d3.scaleLinear()
+      .domain([0,15])
+      .range([h-margin.bottom,margin.top]);
+
+    let xAxis=d3.axisBottom(x).tickFormat(d3.timeFormat("%m/%d %H:%M"));
+    let yAxis=d3.axisLeft(y);
+
+    svg.append("g")
+      .attr("transform",`translate(0,${h-margin.bottom})`)
+      .call(xAxis)
+      .attr("color","white");
+    svg.append("g")
+      .attr("transform",`translate(${margin.left},0)`)
+      .call(yAxis)
+      .attr("color","white");
+
+    let line=d3.line()
+      .x(d=>x(d.parsedDate))
+      .y(d=>y(d.score));
+
+    let path=svg.append("path")
+      .datum(arr)
+      .attr("fill","none")
+      .attr("stroke","#7c3aed")
+      .attr("stroke-width",2)
+      .attr("d",line);
+
+    let totalLen=path.node().getTotalLength();
+    path
+      .attr("stroke-dasharray",totalLen+" "+totalLen)
+      .attr("stroke-dashoffset",totalLen)
+      .transition()
+      .duration(2000)
+      .ease(d3.easeLinear)
+      .attr("stroke-dashoffset",0);
+
+    svg.selectAll(".scoreDot")
+      .data(arr)
+      .enter().append("circle")
+      .attr("cx",d=>x(d.parsedDate))
+      .attr("cy",d=>y(d.score))
+      .attr("r",4)
+      .attr("fill","#c084fc")
+      .attr("opacity",0)
+      .transition()
+      .delay((d,i)=>i*100)
+      .attr("opacity",1);
+  }
+  drawScoreChart();
+</script>
+</body>
+</html>

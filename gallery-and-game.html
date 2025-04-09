@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Garbage Bin - Gallery & Game</title>
+
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- AOS for scroll reveal animations -->
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet" />
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+
+  <!-- GSAP for advanced animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+  <!-- Lightbox for zooming images -->
+  <link 
+    rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css"
+  />
+  <script 
+    src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"
+  ></script>
+
+  <!-- D3 for displaying game score history -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <style>
+    /* Horizontal gallery container styling */
+    .horizontal-gallery {
+      white-space: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+    }
+    .horizontal-gallery::-webkit-scrollbar {
+      height: 8px;
+    }
+    .horizontal-gallery::-webkit-scrollbar-thumb {
+      background: #666;
+      border-radius: 4px;
+    }
+
+    /* Flip-card styles (auto-flip) */
+    .flip-card {
+      perspective: 1000px; /* needed for 3D flip */
+    }
+    .flip-card-inner {
+      transition: transform 0.8s;
+      transform-style: preserve-3D;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .flip-card-front, .flip-card-back {
+      backface-visibility: hidden;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+    .flip-card-back {
+      transform: rotateY(180deg);
+    }
+
+    /* The sorting game canvas */
+    #sortingGame {
+      background: #333;
+      display: block;
+      margin: 0 auto;
+      border: 2px solid #666;
+    }
+  </style>
+</head>
+
+<body class="bg-black text-white font-sans">
+  <!-- PAGE HERO -->
+  <section 
+    class="min-h-[40vh] flex flex-col justify-center items-center bg-gray-900 px-4"
+    data-aos="fade-down"
+  >
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-4">Gallery & Game</h1>
+    <p class="text-gray-300">Explore the visuals &amp; test your sorting skills</p>
+  </section>
+
+  <!-- PRODUCT GALLERY (Horizontal) -->
+  <section class="px-4 py-16 bg-black" data-aos="fade-up">
+    <h2 class="text-3xl md:text-4xl font-bold mb-6 text-center">Product Gallery</h2>
+    <p class="text-gray-400 max-w-2xl mx-auto text-center mb-8">
+      Scroll horizontally (swipe on mobile) to view images:
+    </p>
+    <div class="horizontal-gallery space-x-4">
+      <!-- Each item in gallery -->
+      <a href="images/product1.jpeg" data-lightbox="gallery" class="inline-block w-72">
+        <img 
+          src="images/product1.jpeg" 
+          alt="Product 1" 
+          class="w-full h-auto rounded shadow transform hover:scale-105 transition"
+        />
+      </a>
+      <a href="images/product2.jpeg" data-lightbox="gallery" class="inline-block w-72">
+        <img 
+          src="images/product2.jpeg" 
+          alt="Product 2"
+          class="w-full h-auto rounded shadow transform hover:scale-105 transition"
+        />
+      </a>
+      <a href="images/product3.jpeg" data-lightbox="gallery" class="inline-block w-72">
+        <img 
+          src="images/product3.jpeg" 
+          alt="Product 3"
+          class="w-full h-auto rounded shadow transform hover:scale-105 transition"
+        />
+      </a>
+      <!-- Add as many images as you wish horizontally -->
+    </div>
+  </section>
+
+  <!-- SCHEMATICS + PCB in same section -->
+  <section class="px-4 py-16 bg-gray-900" data-aos="fade-left">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-6 text-center">Schematics & PCBs</h2>
+      <p class="text-gray-400 text-center mb-8 max-w-2xl mx-auto">
+        Hover or tap the PCBs, and they’ll automatically flip every few seconds. 
+        Schematics are static images you can click to enlarge.
+      </p>
+
+      <!-- Schematic images -->
+      <div class="flex flex-wrap justify-center gap-6 mb-10">
+        <a href="images/schematic-arduino.png" data-lightbox="schematics">
+          <img 
+            src="images/schematic-arduino.png" 
+            class="w-64 rounded border" 
+            alt="Arduino Schematic"
+          />
+        </a>
+        <a href="images/schematic-maix.png" data-lightbox="schematics">
+          <img 
+            src="images/schematic-maix.png" 
+            class="w-64 rounded border" 
+            alt="Maix Bit Schematic"
+          />
+        </a>
+      </div>
+
+      <!-- PCBs auto-flip -->
+      <div class="flex flex-wrap justify-center gap-8">
+        <!-- PCB 1 -->
+        <div class="flip-card w-72 h-72 bg-transparent">
+          <div class="flip-card-inner w-full h-full" id="pcb1">
+            <div class="flip-card-front flex items-center justify-center bg-gray-800 rounded-lg border border-gray-700">
+              <img 
+                src="images/pcb1-front.png" 
+                alt="PCB 1 Front" 
+                class="w-full h-auto object-contain rounded-lg" 
+              />
+            </div>
+            <div class="flip-card-back flex items-center justify-center bg-gray-800 rounded-lg border border-gray-700">
+              <img 
+                src="images/pcb1-back.png" 
+                alt="PCB 1 Back" 
+                class="w-full h-auto object-contain rounded-lg" 
+              />
+            </div>
+          </div>
+        </div>
+        <!-- PCB 2 -->
+        <div class="flip-card w-72 h-72 bg-transparent">
+          <div class="flip-card-inner w-full h-full" id="pcb2">
+            <div class="flip-card-front flex items-center justify-center bg-gray-800 rounded-lg border border-gray-700">
+              <img 
+                src="images/pcb2-front.png" 
+                alt="PCB 2 Front" 
+                class="w-full h-auto object-contain rounded-lg" 
+              />
+            </div>
+            <div class="flip-card-back flex items-center justify-center bg-gray-800 rounded-lg border border-gray-700">
+              <img 
+                src="images/pcb2-back.png" 
+                alt="PCB 2 Back" 
+                class="w-full h-auto object-contain rounded-lg" 
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SORTING GAME (Fancy) -->
+  <section class="px-4 py-16 bg-black" data-aos="fade-up">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-3xl md:text-4xl font-bold mb-6">Sorting Game (Improved!)</h2>
+      <p class="text-gray-300 mb-8 leading-relaxed">
+        Try your hand at sorting 15 random items (picked from 40). 
+        You have 4 track lanes to move the falling item – align it with 
+        the correct bin. Let’s see your final score and track your 
+        history over time!
+      </p>
+
+      <!-- Game UI -->
+      <div class="bg-gray-800 p-4 rounded max-w-2xl mx-auto mb-6">
+        <button 
+          id="startGameBtn" 
+          class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 
+                 rounded font-bold mb-4"
+        >
+          Play Sorting Game
+        </button>
+        <canvas id="sortingGame" width="600" height="400"></canvas>
+        <p class="text-sm text-gray-300 mt-2">
+          Press Left/Right Arrow (on desktop) or tap the arrows below (on mobile) 
+          to move across the 4 lanes. 
+        </p>
+        
+        <!-- On-screen arrows for mobile -->
+        <div class="flex justify-center mt-4 space-x-4">
+          <button 
+            id="moveLeftBtn"
+            class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 
+                   rounded font-bold"
+          >
+            ←
+          </button>
+          <button 
+            id="moveRightBtn"
+            class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 
+                   rounded font-bold"
+          >
+            →
+          </button>
+        </div>
+      </div>
+
+      <!-- Detailed result container -->
+      <div id="resultContainer" class="hidden text-left max-w-2xl mx-auto">
+        <h3 class="text-xl font-bold text-green-400 mb-2">Game Result</h3>
+        <p id="gameResult" class="text-lg font-semibold mb-4"></p>
+        <table class="w-full text-left text-sm bg-gray-800 rounded">
+          <thead>
+            <tr class="border-b border-gray-600">
+              <th class="py-2 px-2">Item</th>
+              <th class="py-2 px-2">Correct Bin</th>
+              <th class="py-2 px-2">Your Bin</th>
+              <th class="py-2 px-2">Result</th>
+            </tr>
+          </thead>
+          <tbody id="detailedResults"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCORE HISTORY CHART (D3) -->
+  <section class="px-4 py-16 bg-gray-900" data-aos="fade-left">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-3xl md:text-4xl font-bold mb-6">Your Score History</h2>
+      <p class="text-gray-300 mb-8 leading-relaxed">
+        Below is a line chart of your past scores (out of 15). 
+        Data is stored in your browser’s local storage.
+      </p>
+      <div id="scoreChart" class="mx-auto" style="width: 600px; height: 300px;"></div>
+    </div>
+  </section>
+
+  <!-- SPONSOR + DOWNLOAD -->
+  <section class="px-4 py-16 bg-black text-center" data-aos="fade-up">
+    <h2 class="text-3xl font-bold mb-4">Sponsor</h2>
+    <div class="flex flex-col items-center gap-4 mb-8">
+      <img 
+        src="images/sponsor.jpg" 
+        class="w-32 h-32 rounded-full border-4 border-white shadow" 
+        alt="Sponsor"
+      />
+      <p class="text-xl font-semibold">Mr. Green</p>
+      <p class="text-gray-400">Main Supporter & Advisor</p>
+    </div>
+    <h2 class="text-3xl font-bold mb-4">Download Source Code</h2>
+    <a 
+      href="download/smart-bin-code.zip" 
+      download 
+      class="bg-gradient-to-r from-purple-400 to-blue-400 text-white px-8 py-3 
+             rounded-full text-lg font-bold hover:opacity-80 transition inline-block"
+    >
+      Download ZIP
+    </a>
+    <p class="mt-4 text-gray-400">
+      or check the 
+      <a href="https://github.com/yourrepo" class="underline text-blue-400">GitHub Repo</a>
+    </p>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="px-6 py-8 text-center text-sm text-gray-500 bg-black">
+    Made with 🧠 + 💻 by [YourName] | © 2025 Smart Bin Project
+  </footer>
+
+  <!-- AOS init + GSAP flips + Sorting Game + Score Chart -->
+  <script>
+    // ========== AOS ==========
+    AOS.init({
+      duration: 1000,
+      once: true,
+    });
+
+    // ========== AUTO-FLIP PCBS WITH GSAP OR setInterval ==========
+    function autoFlipCard(cardId) {
+      let flipped = false;
+      setInterval(() => {
+        const inner = document.getElementById(cardId);
+        flipped = !flipped;
+        inner.style.transform = flipped ? "rotateY(180deg)" : "rotateY(0deg)";
+      }, 4000); // flip every 4 seconds
+    }
+    autoFlipCard("pcb1");
+    autoFlipCard("pcb2");
+
+    // ========== SORTING GAME ==========
+    const canvas = document.getElementById("sortingGame");
+    const ctx = canvas.getContext("2d");
+    const startGameBtn = document.getElementById("startGameBtn");
+    const resultContainer = document.getElementById("resultContainer");
+    const gameResult = document.getElementById("gameResult");
+    const detailedResultsTbody = document.getElementById("detailedResults");
+
+    // Mobile arrow buttons
+    const moveLeftBtn = document.getElementById("moveLeftBtn");
+    const moveRightBtn = document.getElementById("moveRightBtn");
+
+    let isPlaying = false;
+    let animationId;
+    let currentItemIndex = 0;
+    let score = 0;
+
+    // We'll define 40 possible garbage items:
+    const garbagePool = [
+      { name: "Battery", type: "Hazardous" },
+      { name: "PaintCan", type: "Hazardous" },
+      { name: "AppleCore", type: "Kitchen" },
+      { name: "BananaPeel", type: "Kitchen" },
+      { name: "PlasticBottle", type: "Recyclable" },
+      { name: "AluminumCan", type: "Recyclable" },
+      { name: "CigaretteButt", type: "Other" },
+      { name: "Tissue", type: "Other" },
+      { name: "GlassBottle", type: "Recyclable" },
+      { name: "Styrofoam", type: "Other" },
+      { name: "EggShell", type: "Kitchen" },
+      { name: "PaperCup", type: "Recyclable" },
+      { name: "SteelCan", type: "Recyclable" },
+      { name: "ChipBag", type: "Other" },
+      { name: "PaperPlate", type: "Kitchen" },
+      { name: "OilBottle", type: "Hazardous" },
+      { name: "PrinterCartridge", type: "Hazardous" },
+      { name: "LeftoverFood", type: "Kitchen" },
+      { name: "WineCork", type: "Other" },
+      { name: "PlasticStraw", type: "Recyclable" },
+      { name: "CardboardBox", type: "Recyclable" },
+      { name: "LightBulb", type: "Hazardous" },
+      { name: "TeaBag", type: "Kitchen" },
+      { name: "PlasticCutlery", type: "Recyclable" },
+      { name: "BrokenCeramic", type: "Other" },
+      { name: "MedicationBottle", type: "Hazardous" },
+      { name: "ExpiredPills", type: "Hazardous" },
+      { name: "OrangePeel", type: "Kitchen" },
+      { name: "PaperTowel", type: "Other" },
+      { name: "CandyWrapper", type: "Other" },
+      { name: "MilkCarton", type: "Recyclable" },
+      { name: "PizzaBox", type: "Kitchen" },
+      { name: "CoconutShell", type: "Kitchen" },
+      { name: "PlasticBag", type: "Recyclable" },
+      { name: "DisposableMask", type: "Other" },
+      { name: "LithiumBattery", type: "Hazardous" },
+      { name: "JuiceBox", type: "Recyclable" },
+      { name: "CoffeeGrounds", type: "Kitchen" },
+      { name: "Tire", type: "Hazardous" },
+      { name: "FabricScrap", type: "Other" },
+    ];
+
+    // We create a random array of 15 items
+    let itemsToDrop = [];
+
+    // The bins are fixed at bottom in 4 tracks
+    const bins = [
+      { label: "Hazardous",   track: 0 },  // x-range maybe 0 - 150
+      { label: "Kitchen",     track: 1 },  // x-range maybe 150 - 300
+      { label: "Recyclable",  track: 2 },  // x-range maybe 300 - 450
+      { label: "Other",       track: 3 },  // x-range maybe 450 - 600
+    ];
+
+    // track -> x position
+    const trackPositions = [75, 225, 375, 525]; 
+    // item dimension
+    const itemWidth = 60;
+    const itemHeight = 30;
+
+    let itemTrack = 1; // start in second track (index 1)
+    let itemY = -50;
+    let itemVY = 2;
+    let currentItem = null; // { name, type }
+
+    // We'll store detailed results:
+    let resultDetails = [];
+
+    function initGame() {
+      if (isPlaying) return;
+      isPlaying = true;
+      score = 0;
+      currentItemIndex = 0;
+      resultDetails = [];
+      resultContainer.classList.add("hidden");
+      detailedResultsTbody.innerHTML = "";
+
+      // create 15 random items from the 40
+      itemsToDrop = [];
+      for (let i=0; i<15; i++) {
+        const pickIndex = Math.floor(Math.random()*garbagePool.length);
+        itemsToDrop.push( garbagePool[pickIndex] );
+      }
+      loadNextItem();
+      animate();
+    }
+
+    function loadNextItem() {
+      if (currentItemIndex >= itemsToDrop.length) {
+        endGame();
+        return;
+      }
+      currentItem = itemsToDrop[currentItemIndex];
+      itemTrack = 1;
+      itemY = -50;
+      itemVY = 2 + Math.random()*2;
+    }
+
+    function animate() {
+      animationId = requestAnimationFrame(animate);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      // draw bins at bottom
+      drawBins();
+
+      // update item
+      if (currentItem) {
+        itemY += itemVY;
+        drawItem();
+
+        if (itemY >= (400 - itemHeight/2)) {
+          // landed
+          // check which bin track we are over
+          const assignedBin = bins[itemTrack].label;
+          const correct = (assignedBin === currentItem.type);
+          if (correct) { score++; }
+          // store result details
+          resultDetails.push({
+            itemName: currentItem.name,
+            correctBin: currentItem.type,
+            yourBin: assignedBin,
+            isCorrect: correct,
+          });
+          currentItemIndex++;
+          loadNextItem();
+        }
+      }
+    }
+
+    function drawBins() {
+      // draw the bottom line
+      ctx.fillStyle = "gray";
+      ctx.fillRect(0, 380, 600, 20);
+
+      // draw bin lines & labels
+      for (let i=0; i<4; i++) {
+        ctx.strokeStyle = "#bbb";
+        ctx.strokeRect(i*150, 380, 150, 20);
+        ctx.fillStyle = "#fff";
+        ctx.font = "14px Arial";
+        ctx.fillText(bins[i].label, i*150 + 10, 395);
+      }
+    }
+
+    function drawItem() {
+      const itemX = trackPositions[itemTrack];
+      // a rectangle to represent the item
+      ctx.fillStyle = "#ffe066";
+      ctx.fillRect(itemX - itemWidth/2, itemY - itemHeight/2, itemWidth, itemHeight);
+
+      ctx.fillStyle = "#000";
+      ctx.font = "12px Arial";
+      let text = currentItem.name;
+      let textWidth = ctx.measureText(text).width;
+      // if text is too wide, scale down
+      if (textWidth > itemWidth - 5) {
+        // clip the text with ellipsis or something
+        while (ctx.measureText(text + '...').width > itemWidth - 5 && text.length > 0) {
+          text = text.slice(0, -1);
+        }
+        text += '...';
+        textWidth = ctx.measureText(text).width;
+      }
+      ctx.fillText(text, itemX - textWidth/2, itemY + 4);
+    }
+
+    function endGame() {
+      cancelAnimationFrame(animationId);
+      isPlaying = false;
+      
+      // Show results
+      gameResult.innerText = `You sorted ${score} out of 15 items correctly!`;
+      resultContainer.classList.remove("hidden");
+
+      // Fill table
+      resultDetails.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="py-1 px-2 border-b border-gray-700">${row.itemName}</td>
+          <td class="py-1 px-2 border-b border-gray-700">${row.correctBin}</td>
+          <td class="py-1 px-2 border-b border-gray-700">${row.yourBin}</td>
+          <td class="py-1 px-2 border-b border-gray-700 
+            ${row.isCorrect ? 'text-green-400' : 'text-red-400'}">
+            ${row.isCorrect ? 'Correct' : 'Wrong'}
+          </td>
+        `;
+        detailedResultsTbody.appendChild(tr);
+      });
+
+      // Save score to localStorage for the chart
+      saveScoreHistory(score);
+      drawScoreChart();
+    }
+
+    // Move item left/right but only among 4 tracks
+    function moveLeft() {
+      if (!isPlaying) return;
+      itemTrack--;
+      if (itemTrack < 0) itemTrack = 0;
+    }
+    function moveRight() {
+      if (!isPlaying) return;
+      itemTrack++;
+      if (itemTrack > 3) itemTrack = 3;
+    }
+
+    window.addEventListener("keydown", e => {
+      if (!isPlaying) return;
+      if (e.key === "ArrowLeft") moveLeft();
+      if (e.key === "ArrowRight") moveRight();
+    });
+    moveLeftBtn.addEventListener("click", moveLeft);
+    moveRightBtn.addEventListener("click", moveRight);
+    
+    startGameBtn.addEventListener("click", initGame);
+
+    // ========== SCORE HISTORY (D3) ==========
+    function saveScoreHistory(newScore) {
+      let scores = JSON.parse(localStorage.getItem("sortingGameScores") || "[]");
+      scores.push({ 
+        date: new Date().toISOString(), 
+        score: newScore 
+      });
+      localStorage.setItem("sortingGameScores", JSON.stringify(scores));
+    }
+
+    function drawScoreChart() {
+      let scores = JSON.parse(localStorage.getItem("sortingGameScores") || "[]");
+      if (scores.length === 0) return;
+
+      // parse data
+      scores.forEach(d => {
+        d.parsedDate = new Date(d.date);
+      });
+      // sort by date
+      scores.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+      const width = 600;
+      const height = 300;
+      const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+
+      d3.select("#scoreChart").select("svg").remove(); // clear previous
+      const svg = d3.select("#scoreChart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+      const x = d3.scaleTime()
+        .domain(d3.extent(scores, d => d.parsedDate))
+        .range([margin.left, width - margin.right]);
+
+      const y = d3.scaleLinear()
+        .domain([0, 15]) // scores out of 15
+        .nice()
+        .range([height - margin.bottom, margin.top]);
+
+      // axis
+      const xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%m/%d %H:%M"));
+      const yAxis = d3.axisLeft(y);
+
+      svg.append("g")
+         .attr("transform", `translate(0,${height - margin.bottom})`)
+         .call(xAxis)
+         .attr("color", "white");
+
+      svg.append("g")
+         .attr("transform", `translate(${margin.left},0)`)
+         .call(yAxis)
+         .attr("color", "white");
+
+      // line
+      const line = d3.line()
+        .x(d => x(d.parsedDate))
+        .y(d => y(d.score));
+
+      // draw line
+      svg.append("path")
+         .datum(scores)
+         .attr("fill", "none")
+         .attr("stroke", "#7c3aed")
+         .attr("stroke-width", 2)
+         .attr("d", line);
+
+      // draw points
+      svg.selectAll(".scoreDot")
+         .data(scores)
+         .enter().append("circle")
+         .attr("class", "scoreDot")
+         .attr("cx", d => x(d.parsedDate))
+         .attr("cy", d => y(d.score))
+         .attr("r", 4)
+         .attr("fill", "#c084fc");
+    }
+
+    // On page load, draw chart if data exists
+    drawScoreChart();
+  </script>
+</body>
+</html>
