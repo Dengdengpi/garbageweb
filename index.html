@@ -5,7 +5,11 @@
     ULTRA-FANCY SMART GARBAGE BIN PAGE
     - Transparent starfields for actual "rain" effect
     - Video is no longer muted
-    - Narrower game history on phone
+    - Ordinal axis "1st, 2nd, 3rd..." in History
+    - Partially transparent waves
+    - Truncated item names in results
+    - Updated: Now 40 items in garbagePool, bigger item bounding box
+    - Now with TWO-LINE item text in the game
   -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -47,14 +51,13 @@
       font-family: 'Poppins', sans-serif;
       overflow-x: hidden;
     }
-
     a {
       text-decoration: none;
     }
 
     /* 
       ====================================================
-      SWIRLING GRADIENT behind starfields
+      SWIRLING GRADIENT BG
     */
     #gradientBG {
       position: fixed;
@@ -77,12 +80,11 @@
     /* 
       ====================================================
       STARFIELDS & RAIN
-      => We'll make the star canvas transparent 
-         so swirling gradient is visible behind them
     */
     #starfieldContainer {
       position: fixed;
-      top: 0; left: 0;
+      top: 0; 
+      left: 0;
       width: 100%; 
       height: 100%;
       z-index: -9999;
@@ -90,14 +92,16 @@
     }
     .starfield-canvas {
       position: absolute;
-      top: 0; left: 0;
+      top: 0; 
+      left: 0;
       width: 100%; 
       height: 100%;
     }
     #starRainContainer {
       pointer-events: none;
       position: fixed;
-      top: 0; left: 0;
+      top: 0; 
+      left: 0;
       width: 100%;
       height: 100%;
       z-index: -9998;
@@ -143,8 +147,13 @@
       margin-top: -5px;
     }
 
+    /* partially transparent wave so swirl behind is visible */
+    .section-wave svg path {
+      fill: rgba(0,0,0,0.4);
+    }
+
     /* 
-      COVERFLOW (video first) + SWIPE
+      COVERFLOW
     */
     .coverflow-container {
       perspective: 1000px;
@@ -189,7 +198,7 @@
     }
     .coverflow-thumbs img {
       width: 48px; 
-      height: 48px; 
+      height: 48px;
       border-radius: 4px;
       object-fit: cover;
       cursor: pointer;
@@ -210,7 +219,7 @@
     }
 
     /* 
-      PCBs => auto flip
+      PCBs => auto flip every 3s
     */
     .pcb-container {
       perspective: 1000px;
@@ -276,16 +285,22 @@
       }
     }
 
-    /* 
-      EXTRA media query for narrower history
-    */
+    /* Truncate itemName in table result */
+    td.itemName {
+      max-width:80px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    /* RESPONSIVE => narrower chart on phone, etc. */
     @media (max-width: 640px) {
       .coverflow-container {
         max-width: 280px;
         height: 220px;
       }
       .coverflow-slide {
-        width: 180px;
+        width: 180px; 
         margin-left: -90px;
       }
 
@@ -308,11 +323,10 @@
         padding: 0.5rem 0.5rem;
         font-size: 0.75rem;
       }
-      /* Also handle #scoreChart itself so it doesn't overflow */
       #scoreChart {
         width: 100%;
-        max-width: 320px; /* keep it narrower on phone */
-        margin:0 auto;
+        max-width: 320px;
+        margin: 0 auto;
       }
     }
   </style>
@@ -364,8 +378,7 @@
 <!-- WAVE -->
 <div class="section-wave">
   <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#000" fill-opacity="1"
-          d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
+    <path d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z" />
   </svg>
 </div>
 
@@ -375,7 +388,7 @@
     <div>
       <div class="coverflow-container" id="coverflowContainer">
         <div class="coverflow-track" id="coverflowTrack">
-          <!-- 0 => Video, no mute by default -->
+          <!-- Slide 0 => video -->
           <div class="coverflow-slide" id="slide0">
             <video 
               preload="metadata" 
@@ -386,20 +399,20 @@
               <source src="video/video.mp4" type="video/mp4"/>
             </video>
           </div>
-          <!-- 1 => product2 -->
+          <!-- Slide 1 => product2 -->
           <div class="coverflow-slide" id="slide1">
-            <img src="images/product2.jpeg" alt="Product Shot 2"/>
+            <img src="images/product2.jpeg" alt="Product 2" />
           </div>
-          <!-- 2 => product3 -->
+          <!-- Slide 2 => product3 -->
           <div class="coverflow-slide" id="slide2">
-            <img src="images/product3.jpeg" alt="Product Shot 3"/>
+            <img src="images/product3.jpeg" alt="Product 3" />
           </div>
         </div>
       </div>
       <div class="coverflow-thumbs mt-2">
         <img src="images/videoposter.jpg" alt="ThumbVideo" onclick="goToCoverflow(0)"/>
-        <img src="images/product2.jpeg" alt="Thumb1" onclick="goToCoverflow(1)"/>
-        <img src="images/product3.jpeg" alt="Thumb2" onclick="goToCoverflow(2)"/>
+        <img src="images/product2.jpeg" alt="Thumb2" onclick="goToCoverflow(1)"/>
+        <img src="images/product3.jpeg" alt="Thumb3" onclick="goToCoverflow(2)"/>
       </div>
       <div class="coverflow-dots" id="coverflowDots">
         <div class="coverflow-dot" onclick="goToCoverflow(0)"></div>
@@ -432,8 +445,7 @@
 <!-- WAVE -->
 <div class="section-wave">
   <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#111" fill-opacity="1"
-          d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
+    <path d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z" />
   </svg>
 </div>
 
@@ -477,8 +489,7 @@
 <!-- WAVE -->
 <div class="section-wave">
   <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#000" fill-opacity="1"
-          d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
+    <path d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
   </svg>
 </div>
 
@@ -490,7 +501,7 @@
       Two schematics shown side-by-side, plus PCBs that auto-flip every 3 seconds.
     </p>
 
-    <!-- Two Schematic Images side-by-side (or stacked on phone) -->
+    <!-- Two Schematic Images side-by-side -->
     <div class="grid md:grid-cols-2 gap-8 mb-12">
       <div>
         <img 
@@ -553,8 +564,7 @@
 <!-- WAVE -->
 <div class="section-wave">
   <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#000" fill-opacity="1"
-          d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
+    <path d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
   </svg>
 </div>
 
@@ -566,7 +576,7 @@
     </h2>
     <p class="text-gray-300 text-center max-w-2xl mx-auto mb-12 leading-relaxed">
       Improper sorting contaminates recyclables and leads to more landfill waste.
-      Test your skills in this interactive game:
+      Test your skills in this interactive game (with two-line item names!):
     </p>
 
     <div class="bg-gray-800 p-6 rounded relative">
@@ -646,12 +656,15 @@
       </div>
 
       <!-- History -->
-      <div id="scoreHistoryContainer" class="hidden bg-gray-700 p-4 rounded mt-4">
+      <div 
+        id="scoreHistoryContainer"
+        class="hidden bg-gray-700 p-4 rounded mt-4"
+      >
         <h3 class="text-xl font-bold mb-2 text-center">Score History</h3>
         <p class="text-gray-300 text-center text-sm mb-4">
-          A chart of your past results (out of 15). Data is stored in your browser.
+          A chart of your past results (out of 15). 
+          <br/>We label each attempt "1st, 2nd, 3rd..."
         </p>
-        <!-- narrower on phone + margin center -->
         <div id="scoreChart" class="mx-auto" style="width:600px; height:300px;"></div>
         <div class="flex justify-center mt-4 space-x-4">
           <button 
@@ -677,8 +690,7 @@
 <!-- WAVE -->
 <div class="section-wave">
   <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#000" fill-opacity="1"
-          d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
+    <path d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
   </svg>
 </div>
 
@@ -720,12 +732,12 @@
 
 <script>
   /*******************************************************
-   AOS
+   AOS init
   *******************************************************/
   AOS.init({ duration: 1200, once: true });
 
   /*******************************************************
-   TYPED
+   typed.js hero text
   *******************************************************/
   var typed = new Typed('#heroTyped', {
     strings: [
@@ -740,7 +752,7 @@
   });
 
   /*******************************************************
-   STARFIELDS
+   STARFIELDS & RAIN
   *******************************************************/
   gsap.registerPlugin(ScrollTrigger);
 
@@ -757,7 +769,7 @@
   let stars1=[], stars2=[], stars3=[], stars4=[];
 
   function resizeAllStars(){
-    [c1,c2,c3,c4].forEach(cv=>{
+    [c1, c2, c3, c4].forEach(cv => {
       cv.width = window.innerWidth;
       cv.height = window.innerHeight;
     });
@@ -773,43 +785,43 @@
         x: Math.random()*w,
         y: Math.random()*h,
         size: Math.random()*3,
-        speed: speedMin+Math.random()*(speedMax-speedMin)
+        speed: speedMin + Math.random()*(speedMax-speedMin)
       });
     }
     return arr;
   }
   function animateStars(){
-    // layer1 => transparent
+    // layer1 => transparent starfield
     ctx1.clearRect(0,0,c1.width,c1.height);
     ctx1.fillStyle="#fff";
     for(let s of stars1){
-      s.y+=s.speed;
-      if(s.y>c1.height)s.y=0;
-      ctx1.fillRect(s.x,s.y,s.size,s.size);
+      s.y += s.speed;
+      if(s.y > c1.height) s.y=0;
+      ctx1.fillRect(s.x, s.y, s.size, s.size);
     }
     // layer2
     ctx2.clearRect(0,0,c2.width,c2.height);
     ctx2.fillStyle="#fff";
     for(let s of stars2){
-      s.y+=s.speed;
-      if(s.y>c2.height)s.y=0;
-      ctx2.fillRect(s.x,s.y,s.size,s.size);
+      s.y += s.speed;
+      if(s.y > c2.height) s.y=0;
+      ctx2.fillRect(s.x, s.y, s.size, s.size);
     }
     // layer3
     ctx3.clearRect(0,0,c3.width,c3.height);
     ctx3.fillStyle="#fff";
     for(let s of stars3){
-      s.y+=s.speed;
-      if(s.y>c3.height)s.y=0;
-      ctx3.fillRect(s.x,s.y,s.size,s.size);
+      s.y += s.speed;
+      if(s.y > c3.height) s.y=0;
+      ctx3.fillRect(s.x, s.y, s.size, s.size);
     }
     // layer4
     ctx4.clearRect(0,0,c4.width,c4.height);
     ctx4.fillStyle="#fff";
     for(let s of stars4){
-      s.y+=s.speed;
-      if(s.y>c4.height)s.y=0;
-      ctx4.fillRect(s.x,s.y,s.size,s.size);
+      s.y += s.speed;
+      if(s.y > c4.height) s.y=0;
+      ctx4.fillRect(s.x, s.y, s.size, s.size);
     }
     requestAnimationFrame(animateStars);
   }
@@ -817,14 +829,14 @@
   resizeAllStars();
   animateStars();
 
-  // star rain => random color
-  const starRainContainer=document.getElementById("starRainContainer");
+  // star rain => random color stars falling from top
+  const starRainContainer = document.getElementById("starRainContainer");
   function spawnFallingStar(){
-    let st=document.createElement("span");
+    let st = document.createElement("span");
     st.classList.add("falling-star");
-    st.innerText="*";
     let colorArr=["#f0f","#0ff","#ff0","#fff","#f00","#0f0","#00f"];
     st.style.color=colorArr[Math.floor(Math.random()*colorArr.length)];
+    st.innerText="*";
     st.style.left=Math.random()*window.innerWidth+"px";
     starRainContainer.appendChild(st);
     setTimeout(()=>st.remove(),4000);
@@ -852,7 +864,7 @@
   });
 
   /*******************************************************
-   COVERFLOW => swipe logic
+   COVERFLOW => swipe logic + dots + video toggle
   *******************************************************/
   let currentIndex=0;
   const slides=[
@@ -864,18 +876,18 @@
   const coverflowContainer=document.getElementById("coverflowContainer");
 
   function updateCoverflow(){
-    for(let i=0;i<slides.length;i++){
-      let offset=i-currentIndex;
-      let s=slides[i];
-      s.style.transform=`
+    for(let i=0; i<slides.length; i++){
+      let offset = i - currentIndex;
+      let s = slides[i];
+      s.style.transform = `
         translateX(${offset*180}px)
         translateZ(${-Math.abs(offset)*180}px)
         rotateY(${offset*-20}deg)
         scale(${1 - Math.abs(offset)*0.1})
       `;
-      s.style.zIndex=slides.length - Math.abs(offset);
+      s.style.zIndex = slides.length - Math.abs(offset);
     }
-    for(let j=0;j<dots.length;j++){
+    for(let j=0; j<dots.length; j++){
       dots[j].classList.remove("active");
     }
     dots[currentIndex].classList.add("active");
@@ -888,8 +900,8 @@
       } else {
         let vid=s.querySelector("video");
         if(vid){
-          // toggle
-          if(vid.paused) vid.play(); else vid.pause();
+          if(vid.paused) vid.play();
+          else vid.pause();
         }
       }
     });
@@ -898,10 +910,11 @@
     currentIndex=idx;
     updateCoverflow();
   }
+  window.goToCoverflow = goToCoverflow;
   updateCoverflow();
 
-  // swipe
-  let startX=0,endX=0;
+  // swipe for mobile/touch
+  let startX=0, endX=0;
   coverflowContainer.addEventListener("touchstart",(e)=>{
     startX=e.touches[0].clientX;
   });
@@ -909,7 +922,7 @@
     endX=e.touches[0].clientX;
   });
   coverflowContainer.addEventListener("touchend",()=>{
-    let dx=endX-startX;
+    let dx=endX - startX;
     if(Math.abs(dx)>50){
       if(dx<0){
         currentIndex=(currentIndex+1)%slides.length;
@@ -921,7 +934,7 @@
   });
 
   /*******************************************************
-   AUTO-FLIP PCBs
+   AUTO-FLIP PCBs (every 3 seconds)
   *******************************************************/
   const pcb1=document.getElementById("pcb1");
   const pcb2=document.getElementById("pcb2");
@@ -934,15 +947,15 @@
   },3000);
 
   /*******************************************************
-   SORTING GAME
+   SORTING GAME => 2-line item approach if > 10 chars
   *******************************************************/
   const canvas=document.getElementById("sortingGame");
   const ctx=canvas.getContext("2d");
   const startGameBtn=document.getElementById("startGameBtn");
   const moveLeftBtn=document.getElementById("moveLeftBtn");
   const moveRightBtn=document.getElementById("moveRightBtn");
-  const resultContainer=document.getElementById("resultContainer");
   const gameSection=document.getElementById("gameSection");
+  const resultContainer=document.getElementById("resultContainer");
   const gameResult=document.getElementById("gameResult");
   const detailedResultsTbody=document.getElementById("detailedResults");
   const confettiContainer=document.getElementById("confetti");
@@ -953,10 +966,9 @@
   const clearHistoryBtn=document.getElementById("clearHistoryBtn");
 
   let isPlaying=false, animationId;
-  let currentItemIndex=0, score=0, itemsToDrop=[];
-  let currentItem=null;
+  let currentItemIndex=0, score=0;
+  let itemsToDrop=[], resultDetails=[], currentItem=null;
   let itemTrack=1, itemY=-50, itemVY=2;
-  let resultDetails=[];
 
   const bins=[
     { label:"Hazardous", track:0 },
@@ -966,31 +978,51 @@
   ];
   const trackPositions=[75,225,375,525];
 
+  // 40 items in the pool
   const garbagePool=[
-    { name:"Battery", type:"Hazardous" },{ name:"PaintCan", type:"Hazardous" },
-    { name:"AppleCore", type:"Kitchen" },{ name:"BananaPeel", type:"Kitchen" },
-    { name:"PlasticBottle", type:"Recyclable" },{ name:"AluminumCan", type:"Recyclable" },
-    { name:"CigaretteButt", type:"Other" },{ name:"Tissue", type:"Other" },
-    { name:"GlassBottle", type:"Recyclable" },{ name:"Styrofoam", type:"Other" },
-    { name:"EggShell", type:"Kitchen" },{ name:"PaperCup", type:"Recyclable" },
-    { name:"SteelCan", type:"Recyclable" },{ name:"ChipBag", type:"Other" },
-    { name:"PaperPlate", type:"Kitchen" },{ name:"OilBottle", type:"Hazardous" },
-    { name:"PrinterCartridge", type:"Hazardous" },{ name:"LeftoverFood", type:"Kitchen" },
-    { name:"WineCork", type:"Other" },{ name:"PlasticStraw", type:"Recyclable" },
-    { name:"CardboardBox", type:"Recyclable" },{ name:"LightBulb", type:"Hazardous" },
-    { name:"TeaBag", type:"Kitchen" },{ name:"PlasticCutlery", type:"Recyclable" },
-    { name:"BrokenCeramic", type:"Other" },{ name:"MedicationBottle", type:"Hazardous" },
-    { name:"ExpiredPills", type:"Hazardous" },{ name:"OrangePeel", type:"Kitchen" },
-    { name:"PaperTowel", type:"Other" },{ name:"CandyWrapper", type:"Other" },
-    { name:"MilkCarton", type:"Recyclable" },{ name:"PizzaBox", type:"Kitchen" },
-    { name:"CoconutShell", type:"Kitchen" },{ name:"PlasticBag", type:"Recyclable" },
-    { name:"DisposableMask", type:"Other" },{ name:"LithiumBattery", type:"Hazardous" },
-    { name:"JuiceBox", type:"Recyclable" },{ name:"CoffeeGrounds", type:"Kitchen" },
-    { name:"Tire", type:"Hazardous" },{ name:"FabricScrap", type:"Other" },
+    { name:"Battery", type:"Hazardous" },
+    { name:"PaintCan", type:"Hazardous" },
+    { name:"AppleCore", type:"Kitchen" },
+    { name:"BananaPeel", type:"Kitchen" },
+    { name:"PlasticBottle", type:"Recyclable" },
+    { name:"AluminumCan", type:"Recyclable" },
+    { name:"CigaretteButt", type:"Other" },
+    { name:"Tissue", type:"Other" },
+    { name:"CoffeeGrounds", type:"Kitchen" },
+    { name:"Tire", type:"Hazardous" },
+    { name:"FabricScrap", type:"Other" },
+    { name:"GlassBottle", type:"Recyclable" },
+    { name:"LightBulb", type:"Hazardous" },
+    { name:"LeftoverMeat", type:"Kitchen" },
+    { name:"SodaCan", type:"Recyclable" },
+    { name:"PlasticBag", type:"Recyclable" },
+    { name:"StyrofoamCup", type:"Other" },
+    { name:"E-WasteCircuit", type:"Hazardous" },
+    { name:"VegetablePeels", type:"Kitchen" },
+    { name:"Newspaper", type:"Recyclable" },
+    { name:"WoodScrap", type:"Other" },
+    { name:"MetalFork", type:"Recyclable" },
+    { name:"ExpiredMedicine", type:"Hazardous" },
+    { name:"EggShells", type:"Kitchen" },
+    { name:"CardboardBox", type:"Recyclable" },
+    { name:"LeftoverRice", type:"Kitchen" },
+    { name:"ChemicalBottle", type:"Hazardous" },
+    { name:"BrokenCeramic", type:"Other" },
+    { name:"FoodWrapper", type:"Other" },
+    { name:"PaperTowel", type:"Other" },
+    { name:"TeaBags", type:"Kitchen" },
+    { name:"PlasticCup", type:"Recyclable" },
+    { name:"UsedSyringe", type:"Hazardous" },
+    { name:"Bones", type:"Kitchen" },
+    { name:"AluminumFoil", type:"Recyclable" },
+    { name:"DeadBatteries", type:"Hazardous" },
+    { name:"FishBones", type:"Kitchen" },
+    { name:"BrokenGlass", type:"Other" },
+    { name:"JunkMail", type:"Recyclable" },
   ];
 
   function initGame(){
-    if(isPlaying) return;
+    if(isPlaying)return;
     isPlaying=true;
     score=0;
     currentItemIndex=0;
@@ -1001,32 +1033,31 @@
     gameSection.classList.remove("hidden");
     gameResult.classList.add("hidden");
 
+    // pick 15 random items
     itemsToDrop=[];
-    for(let i=0; i<15; i++){
+    for(let i=0;i<15;i++){
       let pick=garbagePool[Math.floor(Math.random()*garbagePool.length)];
       itemsToDrop.push(pick);
     }
     loadNextItem();
     animateGame();
   }
-
   function loadNextItem(){
-    if(currentItemIndex>=itemsToDrop.length){
+    if(currentItemIndex >= itemsToDrop.length){
       endGame();
       return;
     }
-    currentItem=itemsToDrop[currentItemIndex];
+    currentItem = itemsToDrop[currentItemIndex];
     itemTrack=1;
     itemY=-50;
     itemVY=2+Math.random()*2;
   }
-
   function animateGame(){
-    animationId=requestAnimationFrame(animateGame);
+    animationId = requestAnimationFrame(animateGame);
     ctx.clearRect(0,0,600,400);
     drawBins();
     if(currentItem){
-      itemY+=itemVY;
+      itemY += itemVY;
       drawItem();
       if(itemY>=370){
         let assignedBin=bins[itemTrack].label;
@@ -1043,7 +1074,6 @@
       }
     }
   }
-
   function drawBins(){
     ctx.fillStyle="#666";
     ctx.fillRect(0,380,600,20);
@@ -1056,22 +1086,34 @@
     }
   }
 
+  // TWO-LINE approach for item names if longer than 10 characters
   function drawItem(){
-    const x=trackPositions[itemTrack];
+    const x = trackPositions[itemTrack];
+    // bigger bounding box => 100×60
     ctx.fillStyle="#ffe066";
-    ctx.fillRect(x-35, itemY-20, 70, 40);
+    ctx.fillRect(x - 50, itemY - 30, 100, 60);
 
     ctx.fillStyle="#000";
-    ctx.font="14px Poppins";
+    ctx.font="12px Poppins";
+
     let text=currentItem.name;
-    let w=ctx.measureText(text).width;
-    if(w>60){
-      while(ctx.measureText(text+"...").width>60 && text.length>0){
-        text=text.slice(0,-1);
+    if(text.length <= 10) {
+      // single line
+      const w=ctx.measureText(text).width;
+      ctx.fillText(text, x - w/2, itemY+5);
+    } else {
+      // two lines => line1 = text.slice(0,10); line2 = rest (truncated if >10 chars)
+      const line1=text.slice(0,10);
+      let line2=text.slice(10);
+      if(line2.length>10) {
+        line2=line2.slice(0,7)+"...";
       }
-      text+="...";
+      const w1=ctx.measureText(line1).width;
+      const w2=ctx.measureText(line2).width;
+      // line1 a bit above center, line2 a bit below center
+      ctx.fillText(line1, x - w1/2, itemY - 3);
+      ctx.fillText(line2, x - w2/2, itemY + 15);
     }
-    ctx.fillText(text, x-(ctx.measureText(text).width/2), itemY+5);
   }
 
   function endGame(){
@@ -1082,10 +1124,11 @@
     resultContainer.classList.remove("hidden");
     gameSection.classList.add("hidden");
 
+    // fill table
     resultDetails.forEach(r=>{
       let tr=document.createElement("tr");
       tr.innerHTML=`
-        <td class="py-1 px-2 border-b border-gray-600">${r.itemName}</td>
+        <td class="itemName py-1 px-2 border-b border-gray-600">${r.itemName}</td>
         <td class="py-1 px-2 border-b border-gray-600">${r.correctBin}</td>
         <td class="py-1 px-2 border-b border-gray-600">${r.yourBin}</td>
         <td class="py-1 px-2 border-b border-gray-600 ${
@@ -1098,19 +1141,12 @@
     });
 
     if(score>=10) launchConfetti(80);
-    saveScoreHistory(score);
+    saveScore(score);
     drawScoreChart();
   }
-
-  function moveLeft(){
-    if(!isPlaying)return;
-    itemTrack=Math.max(0, itemTrack-1);
-  }
-  function moveRight(){
-    if(!isPlaying)return;
-    itemTrack=Math.min(3, itemTrack+1);
-  }
-  window.addEventListener("keydown", e=>{
+  function moveLeft(){ if(isPlaying) itemTrack=Math.max(0,itemTrack-1); }
+  function moveRight(){ if(isPlaying) itemTrack=Math.min(3,itemTrack+1); }
+  window.addEventListener("keydown",(e)=>{
     if(!isPlaying)return;
     if(e.key==="ArrowLeft") moveLeft();
     if(e.key==="ArrowRight") moveRight();
@@ -1121,7 +1157,7 @@
 
   // Confetti
   function launchConfetti(count){
-    for(let i=0; i<count; i++){
+    for(let i=0;i<count;i++){
       createConfettiPiece();
     }
   }
@@ -1139,51 +1175,57 @@
     return arr[Math.floor(Math.random()*arr.length)];
   }
 
-  // showHistory / back
-  showHistoryBtn.addEventListener("click", ()=>{
+  // Show/hide History
+  showHistoryBtn.addEventListener("click",()=>{
     resultContainer.classList.add("hidden");
     scoreHistoryContainer.classList.remove("hidden");
   });
-  backToGameBtn.addEventListener("click", ()=>{
+  backToGameBtn.addEventListener("click",()=>{
     scoreHistoryContainer.classList.add("hidden");
     resultContainer.classList.remove("hidden");
   });
-  tryAgainBtn.addEventListener("click", ()=>{
-    initGame();
-  });
-  clearHistoryBtn.addEventListener("click", ()=>{
-    localStorage.removeItem("sortingGameScores");
+  tryAgainBtn.addEventListener("click",initGame);
+  clearHistoryBtn.addEventListener("click",()=>{
+    localStorage.removeItem("sortingScores");
     drawScoreChart();
   });
 
-  // local storage chart
-  function saveScoreHistory(sc){
-    let arr=JSON.parse(localStorage.getItem("sortingGameScores")||"[]");
-    arr.push({date:new Date().toISOString(), score:sc});
-    localStorage.setItem("sortingGameScores", JSON.stringify(arr));
+  // Save + Chart => ordinal axis
+  function saveScore(sc){
+    let arr=JSON.parse(localStorage.getItem("sortingScores")||"[]");
+    arr.push(sc);
+    localStorage.setItem("sortingScores",JSON.stringify(arr));
+  }
+  function ordinalLabel(i){
+    // handle special 11,12,13 => 'th'
+    if(i%100>=11 && i%100<=13) return i+"th";
+    switch(i%10){
+      case 1: return i+"st";
+      case 2: return i+"nd";
+      case 3: return i+"rd";
+      default: return i+"th";
+    }
   }
   function drawScoreChart(){
-    let arr=JSON.parse(localStorage.getItem("sortingGameScores")||"[]");
+    let arr=JSON.parse(localStorage.getItem("sortingScores")||"[]");
     d3.select("#scoreChart").select("svg").remove();
-    if(arr.length===0)return;
-    arr.forEach(d=> d.parsedDate=new Date(d.date));
-    arr.sort((a,b)=> a.parsedDate-b.parsedDate);
+    if(arr.length===0) return;
 
-    const w=600, h=300, margin={top:20,right:20,bottom:30,left:40};
-    let svg=d3.select("#scoreChart")
-      .append("svg")
+    let w=600, h=300, margin={top:20,right:20,bottom:30,left:40};
+    let svg=d3.select("#scoreChart").append("svg")
       .attr("width",w)
       .attr("height",h);
 
-    let x=d3.scaleTime()
-      .domain(d3.extent(arr,d=>d.parsedDate))
-      .range([margin.left,w-margin.right]);
+    let x=d3.scaleBand()
+      .domain(d3.range(1,arr.length+1))
+      .range([margin.left,w-margin.right])
+      .padding(0.3);
     let y=d3.scaleLinear()
       .domain([0,15])
-      .range([h-margin.bottom,margin.top]);
+      .range([h-margin.bottom, margin.top]);
 
-    let xAxis=d3.axisBottom(x).tickFormat(d3.timeFormat("%m/%d %H:%M"));
-    let yAxis=d3.axisLeft(y);
+    let xAxis=d3.axisBottom(x).tickFormat(i=> ordinalLabel(+i));
+    let yAxis=d3.axisLeft(y).ticks(5);
 
     svg.append("g")
       .attr("transform",`translate(0,${h-margin.bottom})`)
@@ -1195,8 +1237,8 @@
       .attr("color","white");
 
     let line=d3.line()
-      .x(d=>x(d.parsedDate))
-      .y(d=>y(d.score));
+      .x((d,i)=> x(i+1)+(x.bandwidth()/2))
+      .y(d=> y(d));
 
     let path=svg.append("path")
       .datum(arr)
@@ -1217,8 +1259,8 @@
     svg.selectAll(".scoreDot")
       .data(arr)
       .enter().append("circle")
-      .attr("cx", d=>x(d.parsedDate))
-      .attr("cy", d=>y(d.score))
+      .attr("cx",(d,i)=> x(i+1)+(x.bandwidth()/2))
+      .attr("cy",d=> y(d))
       .attr("r",4)
       .attr("fill","#c084fc")
       .attr("opacity",0)
