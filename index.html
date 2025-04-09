@@ -328,6 +328,10 @@
         max-width: 320px;
         margin: 0 auto;
       }
+      #scoreChart svg {
+        width:100%;
+        height:auto;
+      }
     }
   </style>
 </head>
@@ -981,44 +985,44 @@
   // 40 items in the pool
   const garbagePool=[
     { name:"Battery", type:"Hazardous" },
-    { name:"PaintCan", type:"Hazardous" },
-    { name:"AppleCore", type:"Kitchen" },
-    { name:"BananaPeel", type:"Kitchen" },
-    { name:"PlasticBottle", type:"Recyclable" },
-    { name:"AluminumCan", type:"Recyclable" },
-    { name:"CigaretteButt", type:"Other" },
+    { name:"Paint Can", type:"Hazardous" },
+    { name:"Apple Core", type:"Kitchen" },
+    { name:"Banana Peel", type:"Kitchen" },
+    { name:"Plastic Bottle", type:"Recyclable" },
+    { name:"Aluminum Can", type:"Recyclable" },
+    { name:"Cigarette Butt", type:"Other" },
     { name:"Tissue", type:"Other" },
-    { name:"CoffeeGrounds", type:"Kitchen" },
+    { name:"Coffee Grounds", type:"Kitchen" },
     { name:"Tire", type:"Hazardous" },
-    { name:"FabricScrap", type:"Other" },
-    { name:"GlassBottle", type:"Recyclable" },
-    { name:"LightBulb", type:"Hazardous" },
-    { name:"LeftoverMeat", type:"Kitchen" },
-    { name:"SodaCan", type:"Recyclable" },
-    { name:"PlasticBag", type:"Recyclable" },
-    { name:"StyrofoamCup", type:"Other" },
-    { name:"E-WasteCircuit", type:"Hazardous" },
-    { name:"VegetablePeels", type:"Kitchen" },
+    { name:"Fabric Scrap", type:"Other" },
+    { name:"Glass Bottle", type:"Recyclable" },
+    { name:"Light Bulb", type:"Hazardous" },
+    { name:"Leftover Meat", type:"Kitchen" },
+    { name:"Soda Can", type:"Recyclable" },
+    { name:"Plastic Bag", type:"Recyclable" },
+    { name:"Styrofoam Cup", type:"Other" },
+    { name:"E-Waste Circuit", type:"Hazardous" },
+    { name:"Vegetable Peels", type:"Kitchen" },
     { name:"Newspaper", type:"Recyclable" },
-    { name:"WoodScrap", type:"Other" },
-    { name:"MetalFork", type:"Recyclable" },
-    { name:"ExpiredMedicine", type:"Hazardous" },
+    { name:"Wood Scrap", type:"Other" },
+    { name:"Metal Fork", type:"Recyclable" },
+    { name:"Expired Medicine", type:"Hazardous" },
     { name:"EggShells", type:"Kitchen" },
-    { name:"CardboardBox", type:"Recyclable" },
-    { name:"LeftoverRice", type:"Kitchen" },
-    { name:"ChemicalBottle", type:"Hazardous" },
-    { name:"BrokenCeramic", type:"Other" },
-    { name:"FoodWrapper", type:"Other" },
-    { name:"PaperTowel", type:"Other" },
-    { name:"TeaBags", type:"Kitchen" },
-    { name:"PlasticCup", type:"Recyclable" },
-    { name:"UsedSyringe", type:"Hazardous" },
+    { name:"Cardboard Box", type:"Recyclable" },
+    { name:"Leftover Rice", type:"Kitchen" },
+    { name:"Chemical Bottle", type:"Hazardous" },
+    { name:"Broken Ceramic", type:"Other" },
+    { name:"Food Wrapper", type:"Other" },
+    { name:"Paper Towel", type:"Other" },
+    { name:"Tea Bags", type:"Kitchen" },
+    { name:"Plastic Cup", type:"Recyclable" },
+    { name:"Used Syringe", type:"Hazardous" },
     { name:"Bones", type:"Kitchen" },
-    { name:"AluminumFoil", type:"Recyclable" },
-    { name:"DeadBatteries", type:"Hazardous" },
-    { name:"FishBones", type:"Kitchen" },
-    { name:"BrokenGlass", type:"Other" },
-    { name:"JunkMail", type:"Recyclable" },
+    { name:"Aluminum Foil", type:"Recyclable" },
+    { name:"Dead Batteries", type:"Hazardous" },
+    { name:"Fish Bones", type:"Kitchen" },
+    { name:"Broken Glass", type:"Other" },
+    { name:"Junk Mail", type:"Recyclable" },
   ];
 
   function initGame(){
