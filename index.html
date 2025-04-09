@@ -3,8 +3,10 @@
 <head>
   <!-- 
     ULTRA-FANCY SMART GARBAGE BIN PAGE
-    - Same code but with swirling gradient behind starfields
-    - Larger star count, smaller phone game, auto text glow, etc.
+    - Swirling gradient + bigger stars + starRain
+    - Auto text glow
+    - Now with SWIPE coverflow on phone & smaller result/history
+    - Video uses preload, poster, playsinline
   -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -53,9 +55,7 @@
 
     /* 
       ====================================================
-      ADDING A SWIRLING GRADIENT BEHIND EVERYTHING
-      We'll place #gradientBG at z-index: -10000
-      So the starfieldContainer (z-index: -9999) is above it
+      SWIRLING GRADIENT behind starfields
     */
     #gradientBG {
       position: fixed;
@@ -67,7 +67,7 @@
       background: linear-gradient(135deg, #ff0080, #ff8c00, #40c8ff, #ff40ff);
       background-size: 600% 600%;
       animation: swirlGradient 15s ease infinite;
-      opacity: 0.7; /* slight transparency so stars remain visible */
+      opacity: 0.7;
     }
     @keyframes swirlGradient {
       0% { background-position: 0% 50%; }
@@ -77,16 +77,14 @@
 
     /* 
       ====================================================
-      1) MULTI-LAYER STAR + STAR RAIN
-      - Increased starCount, bigger star size range
-      - The star rain is now in random colors
+      STARFIELDS & RAIN
     */
     #starfieldContainer {
       position: fixed;
       top: 0; left: 0;
-      width: 100%;
+      width: 100%; 
       height: 100%;
-      z-index: -9999; /* above #gradientBG */
+      z-index: -9999;
       overflow: hidden;
     }
     .starfield-canvas {
@@ -98,7 +96,8 @@
     #starRainContainer {
       pointer-events: none;
       position: fixed;
-      top: 0; left: 0;
+      top: 0; 
+      left: 0;
       width: 100%;
       height: 100%;
       z-index: -9998;
@@ -107,8 +106,8 @@
     .falling-star {
       position: absolute;
       font-size: 14px;
-      animation: starFall 4s linear infinite;
       font-weight: bold;
+      animation: starFall 4s linear infinite;
     }
     @keyframes starFall {
       0% {
@@ -122,7 +121,7 @@
     }
 
     /* 
-      2) TEXT GLOW EFFECT (NO HOVER)
+      AUTO TEXT GLOW
     */
     .auto-glow {
       animation: glowPulse 3s infinite;
@@ -145,7 +144,7 @@
     }
 
     /* 
-      COVERFLOW (video first)
+      COVERFLOW (video first) + SWIPE
     */
     .coverflow-container {
       perspective: 1000px;
@@ -181,6 +180,7 @@
       height: 100%;
       object-fit: cover;
     }
+
     .coverflow-thumbs, .coverflow-dots {
       display: flex; 
       justify-content: center; 
@@ -210,10 +210,7 @@
     }
 
     /* 
-      SCHEMATICS => two images, side by side
-    */
-    /* 
-      PCBs => auto flip every 3s + hover
+      PCBs => auto flip
     */
     .pcb-container {
       perspective: 1000px;
@@ -223,7 +220,7 @@
       position: relative;
     }
     .pcb-inner {
-      width: 100%; 
+      width: 100%;
       height: 100%;
       position: relative;
       transition: transform 1s;
@@ -242,12 +239,13 @@
     .pcb-flipped .pcb-inner {
       transform: rotateY(180deg);
     }
+    /* also flips on hover */
     .pcb-container:hover .pcb-inner {
       transform: rotateY(180deg) !important;
     }
 
     /* 
-      SORTING GAME => smaller on phone
+      SORTING GAME
     */
     #sortingGame {
       background: #222;
@@ -278,7 +276,9 @@
       }
     }
 
-    /* MEDIA QUERIES */
+    /* 
+      EXTRA media query for result/history so it’s narrower on phone
+    */
     @media (max-width: 640px) {
       .coverflow-container {
         max-width: 280px; 
@@ -289,19 +289,28 @@
         margin-left: -90px;
       }
 
-      /* Sorting game narrower on phones */
       #sortingGame {
         max-width: 320px;
         width: 100%;
         height: 220px; 
       }
+
+      #resultContainer,
+      #scoreHistoryContainer {
+        max-width: 320px;
+        margin: 0 auto;
+      }
+
       #resultContainer table {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
+      }
+      #scoreHistoryContainer table {
+        font-size: 0.7rem;
       }
       #resultContainer button,
       #scoreHistoryContainer button {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.8rem;
+        padding: 0.5rem 0.5rem;
+        font-size: 0.75rem;
       }
     }
   </style>
@@ -309,10 +318,10 @@
 
 <body>
 
-<!-- 1) SWIRLING GRADIENT BEHIND STARS -->
+<!-- SWIRLING GRADIENT BEHIND STARS -->
 <div id="gradientBG"></div>
 
-<!-- 2) STARFIELDS & RAIN ON TOP OF THAT -->
+<!-- STARFIELDS & RAIN -->
 <div id="starfieldContainer">
   <canvas id="starfield1" class="starfield-canvas"></canvas>
   <canvas id="starfield2" class="starfield-canvas"></canvas>
@@ -353,7 +362,8 @@
 <!-- WAVE -->
 <div class="section-wave">
   <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#000" fill-opacity="1" d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+    <path fill="#000" fill-opacity="1"
+          d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
   </svg>
 </div>
 
@@ -361,11 +371,17 @@
 <section id="productShowcase" class="py-16" data-aos="fade-right">
   <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-16 items-center">
     <div>
-      <div class="coverflow-container">
+      <div class="coverflow-container" id="coverflowContainer">
         <div class="coverflow-track" id="coverflowTrack">
-          <!-- slide0 => VIDEO -->
+          <!-- slide0 => VIDEO with extra attrs for phone-friendly poster -->
           <div class="coverflow-slide" id="slide0">
-            <video controls poster="images/videoposter.jpg">
+            <video 
+              preload="metadata" 
+              playsinline 
+              muted
+              controls 
+              poster="images/videoposter.jpg"
+            >
               <source src="video/video.mp4" type="video/mp4"/>
             </video>
           </div>
@@ -416,7 +432,8 @@
 <!-- WAVE -->
 <div class="section-wave">
   <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#111" fill-opacity="1" d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+    <path fill="#111" fill-opacity="1"
+          d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
   </svg>
 </div>
 
@@ -460,11 +477,12 @@
 <!-- WAVE -->
 <div class="section-wave">
   <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#000" fill-opacity="1" d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+    <path fill="#000" fill-opacity="1"
+          d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
   </svg>
 </div>
 
-<!-- SCHEMATICS (two images) & PCBs (auto-flip) -->
+<!-- SCHEMATICS & PCBs -->
 <section id="schematicPCBs" class="py-16 text-center" data-aos="fade-up">
   <div class="max-w-6xl mx-auto px-4">
     <h2 class="text-3xl md:text-4xl font-bold mb-6 auto-glow">Schematics &amp; PCBs</h2>
@@ -535,11 +553,12 @@
 <!-- WAVE -->
 <div class="section-wave">
   <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#000" fill-opacity="1" d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+    <path fill="#000" fill-opacity="1"
+          d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
   </svg>
 </div>
 
-<!-- SORTING GAME => smaller on phones -->
+<!-- SORTING GAME -->
 <section id="sortingMatters" class="py-16 bg-gray-900 relative" data-aos="fade-up">
   <div class="max-w-6xl mx-auto px-4">
     <h2 class="text-3xl md:text-4xl font-bold text-center mb-6 auto-glow">
@@ -564,7 +583,7 @@
           >
             Start Game
           </button>
-          <!-- The canvas is forced smaller on phones with the media query -->
+          <!-- Canvas smaller on phone via media queries -->
           <canvas 
             id="sortingGame"
             width="600"
@@ -658,7 +677,8 @@
 <!-- WAVE -->
 <div class="section-wave">
   <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#000" fill-opacity="1" d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+    <path fill="#000" fill-opacity="1"
+          d="M0,80L48,74.7C96,69,192,59,288,64C384,69,480,91,576,90.7C672,91,768,69,864,74.7C960,80,1056,112,1152,128C1248,144,1344,144,1392,144L1440,144L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"/>
   </svg>
 </div>
 
@@ -700,18 +720,18 @@
 
 <script>
   /*******************************************************
-   AOS
-  *******************************************************/
+   * 1) AOS
+   *******************************************************/
   AOS.init({ duration: 1200, once: true });
 
   /*******************************************************
-   TYPED HERO TEXT
-  *******************************************************/
+   * 2) TYPED
+   *******************************************************/
   var typed = new Typed('#heroTyped', {
     strings: [
       "Revolutionize waste sorting with AI detection & confirmable compartments...",
-      "Now with swirling gradient + bigger stars for a super cosmic vibe!",
-      "Experience the FUTURE of garbage disposal, now!"
+      "Now with swirling gradient, bigger stars, star rain – and swipe coverflow!",
+      "Experience the FUTURE of disposal, now!"
     ],
     typeSpeed: 40,
     backSpeed: 30,
@@ -720,8 +740,8 @@
   });
 
   /*******************************************************
-   STARFIELDS 
-  *******************************************************/
+   * 3) STARFIELDS
+   *******************************************************/
   gsap.registerPlugin(ScrollTrigger);
 
   const c1 = document.getElementById("starfield1");
@@ -733,33 +753,33 @@
   const c4 = document.getElementById("starfield4");
   const ctx4 = c4.getContext("2d");
 
+  let starCount=400;
   let stars1=[], stars2=[], stars3=[], stars4=[];
-  let starCount = 400; // bigger star count
 
   function resizeAllStars(){
     [c1,c2,c3,c4].forEach(cv=>{
-      cv.width = window.innerWidth;
-      cv.height = window.innerHeight;
+      cv.width=window.innerWidth;
+      cv.height=window.innerHeight;
     });
-    stars1 = createStars(starCount, c1.width, c1.height, 0.4, 1.2);
-    stars2 = createStars(starCount, c2.width, c2.height, 0.7, 1.8);
-    stars3 = createStars(starCount, c3.width, c3.height, 1.0, 2.4);
-    stars4 = createStars(starCount, c4.width, c4.height, 1.3, 3.0);
+    stars1=createStars(starCount, c1.width, c1.height, 0.4,1.2);
+    stars2=createStars(starCount, c2.width, c2.height, 0.7,1.8);
+    stars3=createStars(starCount, c3.width, c3.height, 1.0,2.4);
+    stars4=createStars(starCount, c4.width, c4.height, 1.3,3.0);
   }
-  function createStars(count, w, h, speedMin, speedMax){
+  function createStars(count,w,h,speedMin,speedMax){
     let arr=[];
     for(let i=0;i<count;i++){
       arr.push({
         x: Math.random()*w,
         y: Math.random()*h,
         size: Math.random()*3,
-        speed: speedMin + Math.random()*(speedMax-speedMin)
+        speed: speedMin+Math.random()*(speedMax-speedMin)
       });
     }
     return arr;
   }
   function animateStars(){
-    // layer 1
+    // layer1
     ctx1.clearRect(0,0,c1.width,c1.height);
     ctx1.fillStyle="#fff";
     for(let s of stars1){
@@ -767,7 +787,7 @@
       if(s.y>c1.height)s.y=0;
       ctx1.fillRect(s.x,s.y,s.size,s.size);
     }
-    // layer 2
+    // layer2
     ctx2.clearRect(0,0,c2.width,c2.height);
     ctx2.fillStyle="#fff";
     for(let s of stars2){
@@ -775,7 +795,7 @@
       if(s.y>c2.height)s.y=0;
       ctx2.fillRect(s.x,s.y,s.size,s.size);
     }
-    // layer 3
+    // layer3
     ctx3.clearRect(0,0,c3.width,c3.height);
     ctx3.fillStyle="#fff";
     for(let s of stars3){
@@ -783,7 +803,7 @@
       if(s.y>c3.height)s.y=0;
       ctx3.fillRect(s.x,s.y,s.size,s.size);
     }
-    // layer 4
+    // layer4
     ctx4.clearRect(0,0,c4.width,c4.height);
     ctx4.fillStyle="#fff";
     for(let s of stars4){
@@ -798,9 +818,9 @@
   animateStars();
 
   // star rain => random color
-  const starRainContainer = document.getElementById("starRainContainer");
+  const starRainContainer=document.getElementById("starRainContainer");
   function spawnFallingStar(){
-    let st = document.createElement("span");
+    let st=document.createElement("span");
     st.classList.add("falling-star");
     st.innerText="*";
     st.style.left=Math.random()*window.innerWidth+"px";
@@ -816,7 +836,7 @@
   },600);
 
   /*******************************************************
-   TIMELINE STEPS => GSAP Scroll
+   * 4) TIMELINE STEPS => GSAP Scroll
   *******************************************************/
   ["#timelineStep1","#timelineStep2","#timelineStep3","#timelineStep4"].forEach((sel,i)=>{
     gsap.from(sel,{
@@ -832,7 +852,7 @@
   });
 
   /*******************************************************
-   COVERFLOW => video is slide0
+   * 5) COVERFLOW => video is slide0, now with SWIPE
   *******************************************************/
   let currentIndex=0;
   const slides=[
@@ -841,6 +861,7 @@
     document.getElementById("slide2"),
   ];
   const dots=document.getElementById("coverflowDots").children;
+  const coverflowContainer=document.getElementById("coverflowContainer");
 
   function updateCoverflow(){
     for(let i=0;i<slides.length;i++){
@@ -867,20 +888,40 @@
       } else {
         let vid=s.querySelector("video");
         if(vid){
-          if(vid.paused) vid.play();
-          else vid.pause();
+          if(vid.paused) vid.play(); else vid.pause();
         }
       }
     });
   });
   function goToCoverflow(idx){
-    currentIndex=idx;
-    updateCoverflow();
+    currentIndex=idx; updateCoverflow();
   }
   updateCoverflow();
 
+  // swipe logic
+  let startX=0, endX=0;
+  coverflowContainer.addEventListener("touchstart", (e)=>{
+    startX=e.touches[0].clientX;
+  });
+  coverflowContainer.addEventListener("touchmove", (e)=>{
+    endX=e.touches[0].clientX;
+  });
+  coverflowContainer.addEventListener("touchend", ()=>{
+    let dx=endX-startX;
+    if(Math.abs(dx)>50){
+      if(dx<0){
+        // swipe left => next
+        currentIndex=(currentIndex+1)%slides.length;
+      } else {
+        // swipe right => prev
+        currentIndex=(currentIndex-1+slides.length)%slides.length;
+      }
+      updateCoverflow();
+    }
+  });
+
   /*******************************************************
-   AUTO-FLIP PCBs every 3s
+   * 6) AUTO-FLIP PCBs every 3s
   *******************************************************/
   const pcb1=document.getElementById("pcb1");
   const pcb2=document.getElementById("pcb2");
@@ -893,7 +934,7 @@
   },3000);
 
   /*******************************************************
-   SORTING GAME => smaller on phones
+   * 7) SORTING GAME
   *******************************************************/
   const canvas=document.getElementById("sortingGame");
   const ctx=canvas.getContext("2d");
@@ -925,6 +966,7 @@
   ];
   const trackPositions=[75,225,375,525];
 
+  // 40 items
   const garbagePool=[
     { name:"Battery", type:"Hazardous" },{ name:"PaintCan", type:"Hazardous" },
     { name:"AppleCore", type:"Kitchen" },{ name:"BananaPeel", type:"Kitchen" },
@@ -1018,7 +1060,7 @@
   function drawItem(){
     const x=trackPositions[itemTrack];
     ctx.fillStyle="#ffe066";
-    ctx.fillRect(x-35, itemY-20, 70, 40);
+    ctx.fillRect(x-35,itemY-20,70,40);
 
     ctx.fillStyle="#000";
     ctx.font="14px Poppins";
@@ -1078,7 +1120,7 @@
   moveRightBtn.addEventListener("click", moveRight);
   startGameBtn.addEventListener("click", initGame);
 
-  /* confetti */
+  // Confetti
   function launchConfetti(count){
     for(let i=0; i<count; i++){
       createConfettiPiece();
@@ -1098,7 +1140,7 @@
     return arr[Math.floor(Math.random()*arr.length)];
   }
 
-  /* results & history */
+  // showHistory / back
   showHistoryBtn.addEventListener("click", ()=>{
     resultContainer.classList.add("hidden");
     scoreHistoryContainer.classList.remove("hidden");
@@ -1115,6 +1157,7 @@
     drawScoreChart();
   });
 
+  // Local storage chart
   function saveScoreHistory(sc){
     let arr=JSON.parse(localStorage.getItem("sortingGameScores")||"[]");
     arr.push({date:new Date().toISOString(), score:sc});
@@ -1125,20 +1168,20 @@
     d3.select("#scoreChart").select("svg").remove();
     if(arr.length===0)return;
     arr.forEach(d=> d.parsedDate=new Date(d.date));
-    arr.sort((a,b)=> a.parsedDate-b.parsedDate);
+    arr.sort((a,b)=> a.parsedDate - b.parsedDate);
 
-    const w=600,h=300,margin={top:20,right:20,bottom:30,left:40};
+    const w=600, h=300, margin={top:20, right:20, bottom:30, left:40};
     let svg=d3.select("#scoreChart")
       .append("svg")
       .attr("width",w)
       .attr("height",h);
 
     let x=d3.scaleTime()
-      .domain(d3.extent(arr,d=>d.parsedDate))
-      .range([margin.left,w-margin.right]);
+      .domain(d3.extent(arr, d=>d.parsedDate))
+      .range([margin.left, w-margin.right]);
     let y=d3.scaleLinear()
       .domain([0,15])
-      .range([h-margin.bottom,margin.top]);
+      .range([h-margin.bottom, margin.top]);
 
     let xAxis=d3.axisBottom(x).tickFormat(d3.timeFormat("%m/%d %H:%M"));
     let yAxis=d3.axisLeft(y);
@@ -1147,7 +1190,6 @@
       .attr("transform",`translate(0,${h-margin.bottom})`)
       .call(xAxis)
       .attr("color","white");
-
     svg.append("g")
       .attr("transform",`translate(${margin.left},0)`)
       .call(yAxis)
@@ -1166,7 +1208,7 @@
 
     let totalLen=path.node().getTotalLength();
     path
-      .attr("stroke-dasharray", totalLen + " " + totalLen)
+      .attr("stroke-dasharray", totalLen+" "+totalLen)
       .attr("stroke-dashoffset", totalLen)
       .transition()
       .duration(2000)
@@ -1178,7 +1220,7 @@
       .enter().append("circle")
       .attr("cx", d=>x(d.parsedDate))
       .attr("cy", d=>y(d.score))
-      .attr("r", 4)
+      .attr("r",4)
       .attr("fill","#c084fc")
       .attr("opacity",0)
       .transition()
