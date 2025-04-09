@@ -3,10 +3,9 @@
 <head>
   <!-- 
     ULTRA-FANCY SMART GARBAGE BIN PAGE
-    - Swirling gradient + bigger stars + starRain
-    - Auto text glow
-    - Now with SWIPE coverflow on phone & smaller result/history
-    - Video uses preload, poster, playsinline
+    - Transparent starfields for actual "rain" effect
+    - Video is no longer muted
+    - Narrower game history on phone
   -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -78,6 +77,8 @@
     /* 
       ====================================================
       STARFIELDS & RAIN
+      => We'll make the star canvas transparent 
+         so swirling gradient is visible behind them
     */
     #starfieldContainer {
       position: fixed;
@@ -86,6 +87,7 @@
       height: 100%;
       z-index: -9999;
       overflow: hidden;
+      /* no background color => transparent */
     }
     .starfield-canvas {
       position: absolute;
@@ -96,8 +98,7 @@
     #starRainContainer {
       pointer-events: none;
       position: fixed;
-      top: 0; 
-      left: 0;
+      top: 0; left: 0;
       width: 100%;
       height: 100%;
       z-index: -9998;
@@ -180,17 +181,17 @@
       height: 100%;
       object-fit: cover;
     }
-
-    .coverflow-thumbs, .coverflow-dots {
-      display: flex; 
-      justify-content: center; 
-      gap: 0.5rem; 
+    .coverflow-thumbs,
+    .coverflow-dots {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
       margin-top: 0.5rem;
     }
     .coverflow-thumbs img {
       width: 48px; 
       height: 48px; 
-      border-radius: 4px; 
+      border-radius: 4px;
       object-fit: cover;
       cursor: pointer;
       transition: transform 0.2s;
@@ -226,11 +227,11 @@
       transition: transform 1s;
       transform-style: preserve-3D;
     }
-    .pcb-front, 
-    .pcb-back {
+    .pcb-front, .pcb-back {
       position: absolute;
       top: 0; left: 0;
-      width: 100%; height: 100%;
+      width: 100%; 
+      height: 100%;
       backface-visibility: hidden;
     }
     .pcb-back {
@@ -277,33 +278,30 @@
     }
 
     /* 
-      EXTRA media query for result/history so it’s narrower on phone
+      EXTRA media query for narrower history 
+      + no forced mute on video
     */
     @media (max-width: 640px) {
       .coverflow-container {
-        max-width: 280px; 
+        max-width: 280px;
         height: 220px;
       }
       .coverflow-slide {
-        width: 180px; 
+        width: 180px;
         margin-left: -90px;
       }
 
       #sortingGame {
         max-width: 320px;
         width: 100%;
-        height: 220px; 
+        height: 220px;
       }
-
       #resultContainer,
       #scoreHistoryContainer {
         max-width: 320px;
         margin: 0 auto;
       }
-
-      #resultContainer table {
-        font-size: 0.7rem;
-      }
+      #resultContainer table,
       #scoreHistoryContainer table {
         font-size: 0.7rem;
       }
@@ -312,13 +310,19 @@
         padding: 0.5rem 0.5rem;
         font-size: 0.75rem;
       }
+      /* Also handle #scoreChart itself so it doesn't overflow */
+      #scoreChart {
+        width: 100%;
+        max-width: 320px; /* keep it narrower */
+        margin:0 auto;
+      }
     }
   </style>
 </head>
 
 <body>
 
-<!-- SWIRLING GRADIENT BEHIND STARS -->
+<!-- SWIRLING GRADIENT -->
 <div id="gradientBG"></div>
 
 <!-- STARFIELDS & RAIN -->
@@ -367,35 +371,33 @@
   </svg>
 </div>
 
-<!-- PRODUCT SHOWCASE (Video first in coverflow) -->
+<!-- PRODUCT SHOWCASE -->
 <section id="productShowcase" class="py-16" data-aos="fade-right">
   <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-16 items-center">
     <div>
       <div class="coverflow-container" id="coverflowContainer">
         <div class="coverflow-track" id="coverflowTrack">
-          <!-- slide0 => VIDEO with extra attrs for phone-friendly poster -->
+          <!-- 0 => Video, no mute by default -->
           <div class="coverflow-slide" id="slide0">
             <video 
               preload="metadata" 
               playsinline 
-              muted
               controls 
               poster="images/videoposter.jpg"
             >
               <source src="video/video.mp4" type="video/mp4"/>
             </video>
           </div>
-          <!-- slide1 => product2 -->
+          <!-- 1 => product2 -->
           <div class="coverflow-slide" id="slide1">
             <img src="images/product2.jpeg" alt="Product Shot 2"/>
           </div>
-          <!-- slide2 => product3 -->
+          <!-- 2 => product3 -->
           <div class="coverflow-slide" id="slide2">
             <img src="images/product3.jpeg" alt="Product Shot 3"/>
           </div>
         </div>
       </div>
-      <!-- thumbnails & dots -->
       <div class="coverflow-thumbs mt-2">
         <img src="images/videoposter.jpg" alt="ThumbVideo" onclick="goToCoverflow(0)"/>
         <img src="images/product2.jpeg" alt="Thumb1" onclick="goToCoverflow(1)"/>
@@ -583,7 +585,6 @@
           >
             Start Game
           </button>
-          <!-- Canvas smaller on phone via media queries -->
           <canvas 
             id="sortingGame"
             width="600"
@@ -652,6 +653,7 @@
         <p class="text-gray-300 text-center text-sm mb-4">
           A chart of your past results (out of 15). Data is stored in your browser.
         </p>
+        <!-- narrower on phone + margin center -->
         <div id="scoreChart" class="mx-auto" style="width:600px; height:300px;"></div>
         <div class="flex justify-center mt-4 space-x-4">
           <button 
@@ -720,17 +722,17 @@
 
 <script>
   /*******************************************************
-   * 1) AOS
-   *******************************************************/
+   AOS
+  *******************************************************/
   AOS.init({ duration: 1200, once: true });
 
   /*******************************************************
-   * 2) TYPED
-   *******************************************************/
+   TYPED
+  *******************************************************/
   var typed = new Typed('#heroTyped', {
     strings: [
       "Revolutionize waste sorting with AI detection & confirmable compartments...",
-      "Now with swirling gradient, bigger stars, star rain – and swipe coverflow!",
+      "Now with swirling gradient, transparent starfields, star rain, no forced mute video!",
       "Experience the FUTURE of disposal, now!"
     ],
     typeSpeed: 40,
@@ -740,8 +742,8 @@
   });
 
   /*******************************************************
-   * 3) STARFIELDS
-   *******************************************************/
+   STARFIELDS
+  *******************************************************/
   gsap.registerPlugin(ScrollTrigger);
 
   const c1 = document.getElementById("starfield1");
@@ -758,8 +760,8 @@
 
   function resizeAllStars(){
     [c1,c2,c3,c4].forEach(cv=>{
-      cv.width=window.innerWidth;
-      cv.height=window.innerHeight;
+      cv.width = window.innerWidth;
+      cv.height = window.innerHeight;
     });
     stars1=createStars(starCount, c1.width, c1.height, 0.4,1.2);
     stars2=createStars(starCount, c2.width, c2.height, 0.7,1.8);
@@ -779,7 +781,7 @@
     return arr;
   }
   function animateStars(){
-    // layer1
+    // layer1 => we do NOT fillRect with black, we just clearRect => transparent
     ctx1.clearRect(0,0,c1.width,c1.height);
     ctx1.fillStyle="#fff";
     for(let s of stars1){
@@ -836,7 +838,7 @@
   },600);
 
   /*******************************************************
-   * 4) TIMELINE STEPS => GSAP Scroll
+   TIMELINE STEPS => GSAP Scroll
   *******************************************************/
   ["#timelineStep1","#timelineStep2","#timelineStep3","#timelineStep4"].forEach((sel,i)=>{
     gsap.from(sel,{
@@ -852,7 +854,7 @@
   });
 
   /*******************************************************
-   * 5) COVERFLOW => video is slide0, now with SWIPE
+   COVERFLOW => swipe logic
   *******************************************************/
   let currentIndex=0;
   const slides=[
@@ -888,32 +890,32 @@
       } else {
         let vid=s.querySelector("video");
         if(vid){
+          // toggle play/pause
           if(vid.paused) vid.play(); else vid.pause();
         }
       }
     });
   });
   function goToCoverflow(idx){
-    currentIndex=idx; updateCoverflow();
+    currentIndex=idx;
+    updateCoverflow();
   }
   updateCoverflow();
 
-  // swipe logic
+  // swipe
   let startX=0, endX=0;
-  coverflowContainer.addEventListener("touchstart", (e)=>{
+  coverflowContainer.addEventListener("touchstart",(e)=>{
     startX=e.touches[0].clientX;
   });
-  coverflowContainer.addEventListener("touchmove", (e)=>{
+  coverflowContainer.addEventListener("touchmove",(e)=>{
     endX=e.touches[0].clientX;
   });
-  coverflowContainer.addEventListener("touchend", ()=>{
+  coverflowContainer.addEventListener("touchend",()=>{
     let dx=endX-startX;
     if(Math.abs(dx)>50){
       if(dx<0){
-        // swipe left => next
         currentIndex=(currentIndex+1)%slides.length;
       } else {
-        // swipe right => prev
         currentIndex=(currentIndex-1+slides.length)%slides.length;
       }
       updateCoverflow();
@@ -921,7 +923,7 @@
   });
 
   /*******************************************************
-   * 6) AUTO-FLIP PCBs every 3s
+   AUTO-FLIP PCBs
   *******************************************************/
   const pcb1=document.getElementById("pcb1");
   const pcb2=document.getElementById("pcb2");
@@ -934,10 +936,10 @@
   },3000);
 
   /*******************************************************
-   * 7) SORTING GAME
+   SORTING GAME
   *******************************************************/
-  const canvas=document.getElementById("sortingGame");
-  const ctx=canvas.getContext("2d");
+  const gameCanvas=document.getElementById("sortingGame");
+  const ctx=gameCanvas.getContext("2d");
   const startGameBtn=document.getElementById("startGameBtn");
   const moveLeftBtn=document.getElementById("moveLeftBtn");
   const moveRightBtn=document.getElementById("moveRightBtn");
@@ -966,7 +968,6 @@
   ];
   const trackPositions=[75,225,375,525];
 
-  // 40 items
   const garbagePool=[
     { name:"Battery", type:"Hazardous" },{ name:"PaintCan", type:"Hazardous" },
     { name:"AppleCore", type:"Kitchen" },{ name:"BananaPeel", type:"Kitchen" },
@@ -1003,7 +1004,7 @@
     gameResult.classList.add("hidden");
 
     itemsToDrop=[];
-    for(let i=0;i<15;i++){
+    for(let i=0; i<15; i++){
       let pick=garbagePool[Math.floor(Math.random()*garbagePool.length)];
       itemsToDrop.push(pick);
     }
@@ -1048,7 +1049,7 @@
   function drawBins(){
     ctx.fillStyle="#666";
     ctx.fillRect(0,380,600,20);
-    for(let i=0;i<4;i++){
+    for(let i=0; i<4; i++){
       ctx.strokeStyle="#aaa";
       ctx.strokeRect(i*150,380,150,20);
       ctx.fillStyle="#fff";
@@ -1157,7 +1158,7 @@
     drawScoreChart();
   });
 
-  // Local storage chart
+  // local storage chart
   function saveScoreHistory(sc){
     let arr=JSON.parse(localStorage.getItem("sortingGameScores")||"[]");
     arr.push({date:new Date().toISOString(), score:sc});
@@ -1168,20 +1169,20 @@
     d3.select("#scoreChart").select("svg").remove();
     if(arr.length===0)return;
     arr.forEach(d=> d.parsedDate=new Date(d.date));
-    arr.sort((a,b)=> a.parsedDate - b.parsedDate);
+    arr.sort((a,b)=> a.parsedDate-b.parsedDate);
 
-    const w=600, h=300, margin={top:20, right:20, bottom:30, left:40};
+    const w=600, h=300, margin={top:20,right:20,bottom:30,left:40};
     let svg=d3.select("#scoreChart")
       .append("svg")
       .attr("width",w)
       .attr("height",h);
 
     let x=d3.scaleTime()
-      .domain(d3.extent(arr, d=>d.parsedDate))
-      .range([margin.left, w-margin.right]);
+      .domain(d3.extent(arr,d=>d.parsedDate))
+      .range([margin.left,w-margin.right]);
     let y=d3.scaleLinear()
       .domain([0,15])
-      .range([h-margin.bottom, margin.top]);
+      .range([h-margin.bottom,margin.top]);
 
     let xAxis=d3.axisBottom(x).tickFormat(d3.timeFormat("%m/%d %H:%M"));
     let yAxis=d3.axisLeft(y);
